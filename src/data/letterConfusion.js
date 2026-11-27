@@ -5,55 +5,54 @@
 // anything; "a" against o, e and c makes the child actually look at the shape.
 
 // Letters that look alike: round bodies, tall stems, the same shape flipped.
-// Only letters of the Polish alphabet: Q and V are not in it, and a game must
-// never offer a letter the child is not learning.
 const SHAPE_LOOKALIKES = {
-  a: ['o', 'e', 'c', 'g', 'd'],
-  b: ['d', 'p', 'h', 'k'],
+  a: ['o', 'e', 'c', 'g', 'd', 'q'],
+  b: ['d', 'p', 'q', 'h', 'k'],
   c: ['e', 'o', 'a', 's'],
-  d: ['b', 'p', 'a', 'g'],
+  d: ['b', 'q', 'p', 'a', 'g'],
   e: ['c', 'a', 'o', 's'],
   f: ['t', 'l', 'j'],
-  g: ['y', 'a', 'j', 'p'],
+  g: ['q', 'y', 'a', 'j', 'p'],
   h: ['n', 'b', 'k', 'm'],
   i: ['j', 'l', 't'],
   j: ['i', 'g', 'y'],
-  k: ['h', 'b', 'r'],
+  k: ['h', 'b', 'r', 'x'],
   l: ['i', 't', 'j', 'f'],
   m: ['n', 'w', 'h'],
   n: ['m', 'h', 'u', 'r'],
   o: ['a', 'c', 'e', 'u'],
-  p: ['b', 'd', 'g', 'r'],
+  p: ['q', 'b', 'd', 'g', 'r'],
+  q: ['p', 'g', 'd', 'b', 'a'],
   r: ['n', 'p', 'k'],
   s: ['c', 'e', 'z'],
   t: ['f', 'l', 'i'],
-  u: ['n', 'o', 'w'],
-  w: ['m', 'u', 'n'],
-  y: ['g', 'j', 'w'],
-  z: ['s', 'n', 'w']
+  u: ['n', 'v', 'o', 'w'],
+  v: ['w', 'y', 'u', 'x'],
+  w: ['m', 'v', 'u', 'n'],
+  x: ['k', 'y', 'v', 'z'],
+  y: ['v', 'g', 'j', 'x'],
+  z: ['s', 'x', 'n']
 };
 
-// Polish letters that differ from their base only by a diacritic. Telling these
-// apart is its own skill, so they are held back for the hardest setting.
-export const DIACRITIC_PAIRS = [
-  ['a', 'ą'],
-  ['c', 'ć'],
-  ['e', 'ę'],
-  ['l', 'ł'],
-  ['n', 'ń'],
-  ['o', 'ó'],
-  ['s', 'ś'],
-  ['z', 'ż'],
-  ['z', 'ź']
+// Letters that are one shape turned or flipped: b d p q, and m w, n u. Every
+// young writer reverses these, so the hardest setting puts them first among the
+// distractors rather than leaving them to the look-alike lists below.
+export const MIRROR_PAIRS = [
+  ['b', 'd'],
+  ['b', 'p'],
+  ['d', 'q'],
+  ['p', 'q'],
+  ['m', 'w'],
+  ['n', 'u']
 ];
 
-// The accented partner of a letter, if it has one.
-export const diacriticPartners = (letter) => {
+// The mirror partners of a letter, if it has any.
+export const mirrorPartners = (letter) => {
   const base = letter.toLowerCase();
   const found = [];
-  for (const [plain, accented] of DIACRITIC_PAIRS) {
-    if (plain === base) found.push(accented);
-    if (accented === base) found.push(plain);
+  for (const [one, other] of MIRROR_PAIRS) {
+    if (one === base) found.push(other);
+    if (other === base) found.push(one);
   }
   return found;
 };
@@ -67,7 +66,7 @@ const looksLike = (a, b) =>
  *
  * @param letter          the answer
  * @param count           how many distractors are needed
- * @param includeDiacritics let accented look-alikes in (hardest setting only)
+ * @param includeMirrors  put the mirror-image letters first (hardest setting only)
  * @param lookalikes      false for the easiest setting: every distractor is a
  *                        clearly different shape, never one that looks alike
  * @param pool            the alphabet to fall back on once look-alikes run out;
@@ -76,7 +75,7 @@ const looksLike = (a, b) =>
 export const confusableLetters = (
   letter,
   count,
-  { includeDiacritics = false, lookalikes = true, pool = [] } = {}
+  { includeMirrors = false, lookalikes = true, pool = [] } = {}
 ) => {
   const base = letter.toLowerCase();
   const seen = new Set([base]);
@@ -91,7 +90,7 @@ export const confusableLetters = (
   };
 
   if (lookalikes) {
-    if (includeDiacritics) diacriticPartners(base).forEach(take);
+    if (includeMirrors) mirrorPartners(base).filter(inPool).forEach(take);
     (SHAPE_LOOKALIKES[base] || []).filter(inPool).forEach(take);
   }
 

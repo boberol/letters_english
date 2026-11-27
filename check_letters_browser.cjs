@@ -20,7 +20,7 @@ const { chromium } = require('playwright');
 const PORT = 5179;
 const URL = `http://localhost:${PORT}/`;
 // Batches, so no single page.evaluate runs for long.
-const BATCHES = ['aąbcćdeęfgh', 'ijklłmnńoóp', 'rsśtuwyzźż', 'AĄBCĆDEĘFGH', 'IJKLŁMNŃOÓP', 'RSŚTUWYZŹŻ'];
+const BATCHES = ['abcdefghi', 'jklmnopqr', 'stuvwxyz', 'ABCDEFGHI', 'JKLMNOPQR', 'STUVWXYZ'];
 const TRIALS = 8;
 const MIN_MEDIUM = 95;
 

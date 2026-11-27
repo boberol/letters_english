@@ -168,20 +168,23 @@ stylus is not stricter than a 60 Hz finger.
 
 ### Letter artwork
 
-Two alphabets, deliberately. `ALPHABET` is the 23 base letters and is what the letter *games*
-draw from — their distractors come from `letterConfusion`, which brings the accented look-alikes
-in only on the hardest setting, because telling `a` from `ą` is its own skill. `TRACING_ALPHABET`
-is all 32 Polish letters and is what the tracing tool offers, in both cases.
+`ALPHABET` is the 26 English letters, used by the letter games and (as `TRACING_ALPHABET`) the
+tracing tool, in both cases. Distractors come from `letterConfusion`: shape look-alikes, plus the
+mirror letters (b d p q, m w, n u, `MIRROR_PAIRS`) put first on the hardest Znajdź literę setting.
+The Polish app's nine accented letters and their artwork were removed.
+
+**q, v, x and Q, V, X are placeholders** (November 2026): Polish has none of them, so they were
+built from straight lines and the existing `a` bowl / `O` until Borys's drawn exports arrive. The
+lowercase three are `src/assets/letters/{q,v,x}.svg` (hand-written, like the other 23 originals);
+the capitals are `letter_sources/upper/{Q,V,X}.svg`, built by `build_letters.cjs`. All six pass the
+letter check. Replace them with the exports, add `UPPERCASE_FIXES` entries if a stroke runs the
+wrong way, and re-run the check.
 
 Three things about the files:
 
 - **Capitals live in `assets/letters/upper/`.** `A.svg` and `a.svg` are the same name to Windows
   and macOS, so a flat folder would lose one of them the first time the artwork was copied
   anywhere. Lowercase keeps `assets/letters/`.
-- **File names are ASCII** — `ą` is `a-ogonek.svg`, `ż` is `z-dot.svg` (`ASSET_SLUGS`). A name
-  carrying the letter itself has to survive the filesystem, the bundler's glob and the string
-  `buildLetterPaths` concatenates to look it up, and those three do not agree on how to normalise
-  a Polish character.
 - **`data-body` and `data-band` on the `<svg>` decide the framing.** `data-body` is the y range of
   the letter body; `data-band` is where that body belongs between the ruled lines (`0.43 0.68` is
   the writing band, `0.18 0.68` the ascender and capital band). Without them `parseSVG` falls back
@@ -200,10 +203,10 @@ purpose: a kreska over a capital rises about 14% above the top line, and at 10% 
 of the canvas. At 18% it and the tail of a `g` clear their edges by about the same 4-5%. Move all
 four together, then rebuild the letters.
 
-**Do not hand-edit anything in `assets/letters/upper/`, or the nine accented lowercase files.**
-`node build_letters.cjs` regenerates all 41 of them from `letter_sources/`, which holds the
-exported artwork: `letter_sources/upper/` the 32 capitals, `letter_sources/lower/` the nine
-Polish lowercase letters that were drawn by hand. Re-export into those folders and re-run it. It
+**Do not hand-edit anything in `assets/letters/upper/`.** `node build_letters.cjs` regenerates
+all 26 capitals from `letter_sources/upper/`, the exported artwork. Re-export into that folder and
+re-run it. (The notes below on marks and composing describe the Polish accented letters the script
+used to build too; that code is gone.) It
 exists because of three things that cannot be done by hand at this scale:
 
 - *Direction, order and stroke splitting.* The checker compares trajectories, so a letter drawn
@@ -237,7 +240,7 @@ Neither is a substitute for the real check, which needs a browser because sampli
 
 ```js
 const v = await import('/check_validation.js');
-await v.run({ letters: 'aąbcćdeęfghijklłmnńoóprsśtuwyzźż', trials: 8 });  // then the capitals
+await v.run({ letters: 'abcdefghijklmnopqrstuvwxyz', trials: 8 });  // then the capitals
 v.margins({ letters: 'abh' });      // raw scores: right attempts against the nearest wrong letters
 v.explain('b', 'guided', 'medium', 3);
 ```
@@ -644,8 +647,7 @@ Noto Emoji is OFL/Apache — attribution belongs in a README if this is ever pub
   Strzałki and Liczby), or the tablet dims and locks mid-run while the child draws on paper.
 - **Letters a child reads are drawn in Andika** (`--font-letters`, bundled in `src/assets/fonts/`,
   SIL OFL): a single-storey a and g like the tracing guides, and an I, l and 1 that differ. Without
-  it every device drew its own system font. The Polish file is a 4 KB subset of Fontsource's Latin
-  Extended cut (`pyftsubset ... --unicodes="U+0104-0107,U+0118-0119,U+0141-0144,U+015A-015B,U+0179-017C"`).
+  it every device drew its own system font. Only the Latin subset ships; the Polish cut was removed.
 - **Colour as text needs the dark shade.** `data/colors.js` gives each colour a `text` for titles
   and labels (the bright `color` is for fills a child names; yellow on cream is about 2:1), Kolorowe
   liczby edges its digits in it, and `FeedbackModal` darkens its title colour to 4.5:1 by itself.

@@ -33,8 +33,7 @@
 }
 
 /* Andika Bold (SIL Open Font License, src/assets/fonts/OFL.txt): the Latin
-   subset as published by Fontsource, plus a 4 KB cut of its Latin Extended
-   file holding only the nine Polish letters, instead of all 81 KB of it. */
+   subset as published by Fontsource, which covers every English letter. */
 @font-face {
   font-family: "Andika";
   font-style: normal;
@@ -42,15 +41,6 @@
   font-display: swap;
   src: url("./assets/fonts/andika-latin-700.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
-}
-
-@font-face {
-  font-family: "Andika";
-  font-style: normal;
-  font-weight: 700 900;
-  font-display: swap;
-  src: url("./assets/fonts/andika-polish-700.woff2") format("woff2");
-  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 
 html {

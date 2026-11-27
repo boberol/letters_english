@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168.65 470.48">
+<!-- Placeholder until the drawn export arrives. Replace this file with the export and re-run build_letters.cjs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 545">
   <defs>
     <style>
       .cls-1 {
@@ -12,7 +13,7 @@
     </style>
   </defs>
   <g id="Layer_1-2" data-name="Layer 1">
-    <path class="cls-1" d="M76.9,8.5h0"/>
-    <path class="cls-1" d="M8.5,134.75h129.18c40.34,0,13.01,47.18,5.1,59.81L10.74,424.31c-7.39,16.23,4.48,37.67,22.31,37.67h127.1"/>
+    <path class="cls-1" d="M8.5,8.5L351.5,536.5"/>
+    <path class="cls-1" d="M351.5,8.5L8.5,536.5"/>
   </g>
 </svg>
