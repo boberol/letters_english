@@ -303,6 +303,30 @@ body {
   color: #334155;
 }
 
+.parent-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* The grown-ups' gate: one answer box, big enough for a thumb. */
+.parent-gate-input {
+  width: 7em;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 2px solid #CBD5E1;
+  border-radius: 12px;
+  font-size: 1.4rem;
+  text-align: center;
+  color: #0F172A;
+  background: #FFFFFF;
+}
+
+.parent-gate-input:focus {
+  outline: 3px solid #A5B4FC;
+  border-color: #4F46E5;
+}
+
 /* ─── Home screen sections ─────────────────────────── */
 .tools-section {
   width: 100%;

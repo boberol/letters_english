@@ -492,6 +492,27 @@ by one call: `App.jsx` passes every change of `view` to `onScreen`. Borys's rule
 - **`disableAds()`** is for the "Remove ads" purchase: no banner, no full-screen ad, from then on.
 - The plugin is `@capacitor-community/admob`, pinned to an exact version.
 
+### The "Remove ads" purchase and the grown-ups' gate
+
+One Google Play in-app product, **`remove_ads`** (non-consumable; created and priced in Play Console,
+about £5.99/€5.99), bought from the "For grown-ups" panel. `utils/purchase.js` is a store shaped like
+`progress`, read through `hooks/usePurchase.js`; the plugin is `cordova-plugin-purchase` (pinned),
+which Capacitor loads as a Cordova plugin, so it starts on `deviceready` and only in the Android app.
+
+- **Owning it calls `disableAds()`** and is remembered in `letter_app_ads_removed`, so a family that
+  paid sees no ad at launch, offline included (`main.jsx` imports the store before the first render).
+  Play stays the authority: once it has answered (`receiptsReady`) and the product is not owned - a
+  refund - the flag is cleared.
+- **Purchases are acknowledged at once** (`transaction.finish()` on `approved`); Play refunds one left
+  unacknowledged for three days. There is no receipt server: the purchase is a switch on the tablet,
+  and Play reports it again on any device signed in to the same account ("Restore purchase" asks now).
+- **The section shows only when Play has loaded the product, or it is owned**, so the web build and a
+  tablet without Play show nothing to buy. The price is Play's, in the buyer's currency.
+- **Everything behind "For grown-ups" is behind `ParentGate`**: a multiplication written in words
+  ("seven times six") with a number box. Google Play's Families policy wants a gate before purchases
+  and links out of the app, and the panel has both. A pre-reader cannot read the question; a wrong
+  answer gets a new one.
+
 ### Windows PCs and classroom boards
 
 *This section describes the Polish app. The English edition ships on Android only and its web
@@ -687,7 +708,9 @@ Noto Emoji is OFL/Apache — attribution belongs in a README if this is ever pub
   the card as tall as it was with an emoji. The pattern chips inside a family (🧱, 🥛...) are still emoji.
 - **The home grid is five across** from 760px, so the five Ćwicz rękę cards share a row; below 680px of
   height the heading and card subtitles step aside so all twelve cards fit a 1024x600 tablet. The
-  privacy policy and "Wyzeruj postępy" (asks twice) are behind "Dla rodzica" at the bottom.
+  privacy policy link, "Remove ads" and "Clear progress" (asks twice) are behind "For grown-ups" at
+  the bottom, which opens only past `ParentGate`. The policy itself is `store/privacy.html`, uploaded
+  by hand to acentrum.pl with `store/app-ads.txt` (see `store/README.md`); the app links to it.
 - Esc steps back a screen from anywhere (`App.jsx`), and a reload inside a tool reopens that tool.
 - Layout targets tablets: verify at 1280×800, 1024×600 and 390×844. Tap targets are 44px.
 - **Nothing on an activity screen should move because of something the child did.** Things that
