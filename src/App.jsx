@@ -9,6 +9,7 @@ import { useProgress } from './hooks/useProgress';
 import { useInstall } from './hooks/useInstall';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { install } from './utils/install';
+import { onScreen as adsOnScreen } from './utils/ads';
 import starIcon from './assets/menu-icons/wyniki.webp';
 
 // Every screen but the home grid is loaded when it is first opened. As one
@@ -87,6 +88,12 @@ export default function App() {
   // two-screen tools use it.
   const [selection, setSelection] = useState(() => restoredScreen()?.item ?? null);
   const [isMuted, setIsMuted] = useState(() => sounds.getMuted());
+  // The Android app's ads follow the screen: a banner on the menus, hidden in
+  // every activity, and now and then a full-screen ad on the way back to the
+  // home grid (utils/ads.js has the rules). Nothing happens on the web.
+  useEffect(() => {
+    adsOnScreen(view);
+  }, [view]);
   const { totalStars } = useProgress();
   const stickerFraction = stickerProgress(totalStars).fraction;
   const { canInstall, fullscreenAvailable, fullscreen } = useInstall();

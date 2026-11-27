@@ -11,6 +11,7 @@
     "build:android": "vite build --mode android && cap sync android"
   },
   "dependencies": {
+    "@capacitor-community/admob": "8.3.0",
     "@capacitor/android": "^8.6.3",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.6.3",
