@@ -1,0 +1,17 @@
+# Gradle and Android Studio output.
+.gradle
+build
+app/build
+.idea
+*.iml
+
+# Where the Android SDK is on this machine. `node android_build.mjs` writes it,
+# and so does Android Studio when it opens the project.
+local.properties
+
+# The release signing key and its password. This key IS the app's identity: an
+# update signed with any other key is refused by every tablet that has the app.
+# Keep a copy somewhere backed up, never in the repository.
+keystore.properties
+*.jks
+*.keystore

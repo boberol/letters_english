@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "playgoo.acentrum",
+      "sha256_cert_fingerprints": [
+        "57:F7:EC:4E:A8:93:19:C5:C8:2F:09:8D:F5:B4:A4:C6:56:74:F0:C6:DB:9D:C2:51:71:CB:F2:6C:6C:DD:58:80",
+        "3A:DE:1B:0E:C2:9A:C0:C9:4B:19:16:F4:E5:89:06:11:27:D5:EB:93:8B:77:27:4B:BD:39:85:C4:6B:73:CF:9D"
+      ]
+    }
+  }
+]

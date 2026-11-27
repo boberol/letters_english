@@ -1,0 +1,66 @@
+# PlayGoo - literki.acentrum.pl
+# Lives in public/ so every `npm run build` copies it into dist/.
+
+# 1. Force HTTPS. A service worker only registers on a secure origin, and an
+#    https page cannot call the activation endpoint from an http page.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+  # Never rewrite the Android verification file.
+  RewriteRule ^\.well-known/ - [L]
+
+  # 2. Single-page fallback for paths that are not real files.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# 3. MIME types. A manifest served as text/html is ignored and the install
+#    prompt never appears. Many shared hosts do not know .webmanifest.
+<IfModule mod_mime.c>
+  AddType application/manifest+json  .webmanifest
+  AddType image/svg+xml              .svg
+  AddType application/javascript     .js
+  AddType application/json           .json
+  AddType font/woff2                 .woff2
+</IfModule>
+
+# 4. Caching. Files under /assets/ carry a content hash, so they are safe to
+#    cache forever. sw.js must NOT be cached: it is how the app updates itself,
+#    and a cached copy freezes every tablet on the build it first saw.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|svg|png|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  <FilesMatch "^(sw|registerSW|workbox-[a-z0-9]+)\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  <FilesMatch "^(index\.html|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+
+  # Chrome fetches this to verify the Android app owns the domain.
+  <FilesMatch "^assetlinks\.json$">
+    Header set Access-Control-Allow-Origin "*"
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# 5. Compression. The JS bundle is 542 kB raw, 167 kB gzipped.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain
+  AddOutputFilterByType DEFLATE application/javascript text/javascript
+  AddOutputFilterByType DEFLATE application/json application/manifest+json
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+DirectoryIndex index.html

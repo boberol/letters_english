@@ -1,0 +1,48 @@
+# Builds the app and publishes it to the existing Cloudflare Pages project on
+# every push to master. This deliberately does not use Cloudflare's own Git
+# integration: naukaliterek was created by direct upload and cannot be switched
+# to Git, and a new project means a new origin - every activated tablet would
+# ask for its code again. See "The licence server" in CLAUDE.md.
+#
+# Needs four repository secrets: CLOUDFLARE_API_TOKEN (Account > Cloudflare
+# Pages > Edit), CLOUDFLARE_ACCOUNT_ID, and the two VITE_ values from .env.
+# Without the VITE_ ones the build refuses, and nothing is deployed.
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# A second push while one deploy is running waits for it rather than racing it
+# to the same production branch.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Vite 8 needs Node 20.19 or newer.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          VITE_ACTIVATION_URL: ${{ secrets.VITE_ACTIVATION_URL }}
+          VITE_LICENSE_PUBLIC_KEY: ${{ secrets.VITE_LICENSE_PUBLIC_KEY }}
+
+      # --branch master is the production branch; any other name becomes a
+      # preview at a hashed subdomain while the real address keeps the old build.
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name naukaliterek --branch master

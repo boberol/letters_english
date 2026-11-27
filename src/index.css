@@ -1,0 +1,4621 @@
+/* ─── Global Design Tokens & Variables ─────────────────── */
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Letters a child is asked to recognise are drawn in one bundled font, so
+     the same letter looks the same on an iPad, an Android tablet and a Windows
+     board. Andika is made for early readers: a single-storey a and g like the
+     tracing guides, and an I, l and 1 that cannot be mistaken for each other. */
+  --font-letters: "Andika", var(--font-ui);
+  font-family: var(--font-ui);
+  
+  --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 45%, #fefce8 100%);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  
+  /* Fluid Spacing Tokens */
+  --space-xs: clamp(4px, 1vw, 8px);
+  --space-sm: clamp(8px, 2vw, 14px);
+  --space-md: clamp(14px, 3vw, 24px);
+  --space-lg: clamp(20px, 4vw, 36px);
+  --space-xl: clamp(28px, 6vw, 48px);
+
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Andika Bold (SIL Open Font License, src/assets/fonts/OFL.txt): the Latin
+   subset as published by Fontsource, plus a 4 KB cut of its Latin Extended
+   file holding only the nine Polish letters, instead of all 81 KB of it. */
+@font-face {
+  font-family: "Andika";
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url("./assets/fonts/andika-latin-700.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
+}
+
+@font-face {
+  font-family: "Andika";
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url("./assets/fonts/andika-polish-700.woff2") format("woff2");
+  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
+}
+
+html {
+  /* A pull down on a screen that does not scroll must not reload the activity
+     (Chrome's pull-to-refresh), and a swipe must not bounce the page. The
+     viewport takes this from the root element, so html is enough.
+
+     It must NOT also be on body. With overflow-x: hidden there too, body was a
+     scroll container of its own (hidden turns overflow-y into auto) that never
+     had anything to scroll; a vertical swipe latched onto it, and
+     overscroll-behavior: none then stopped it passing the swipe up to the
+     page. No screen could be scrolled by touch on a phone or tablet. */
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--font-ui);
+  color: var(--text-main);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+}
+
+body {
+  /* clip, not hidden: it stops sideways overflow (iOS does not always honour
+     it on the viewport) without making body a scroll container. */
+  overflow-x: clip;
+  display: flex;
+  flex-direction: column;
+  background-image: 
+    radial-gradient(#cbd5e1 1.5px, transparent 1.5px),
+    var(--bg-gradient);
+  background-size: 28px 28px, 100% 100%;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100dvh;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  position: relative;
+}
+
+/* ─── Keyboard Focus ───────────────────────────────── */
+/* Nothing had a focus ring, so the app was unusable by keyboard or switch
+   access. Mouse and touch users never see these. */
+:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.tool-card:focus-visible,
+.letter-btn:focus-visible,
+.action-btn:focus-visible,
+.scramble-letter-tile:focus-visible,
+.scramble-slot:focus-visible,
+.shape-select-card:focus-visible {
+  outline-offset: 4px;
+}
+
+/* ─── Reduced Motion ───────────────────────────────── */
+/* Respect the OS setting: hold the finished state instead of animating. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .path-animate {
+    stroke-dashoffset: 0;
+  }
+
+  .shape-start-dot {
+    opacity: 0.85;
+  }
+}
+
+/* ─── Glassmorphism Cards ──────────────────────────── */
+.glass-panel {
+  /* No backdrop blur: every panel sits on a flat or gently graded background,
+     where a blur changes nothing you can see and still costs a cheap tablet's
+     GPU a re-composite of everything behind each panel. */
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 28px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 3px solid rgba(255, 255, 255, 0.95);
+}
+
+/* ─── Global Top Navigation Bar ────────────────────── */
+.global-nav-right {
+  position: fixed;
+  top: clamp(10px, 2.5vw, 18px);
+  right: clamp(10px, 2.5vw, 18px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-btn, .sound-toggle-btn {
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid white;
+  border-radius: 50%;
+  width: clamp(44px, 9vw, 50px);
+  height: clamp(44px, 9vw, 50px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  color: #334155;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  flex-shrink: 0;
+}
+
+
+@media (hover: hover) {
+  .home-btn:hover, .sound-toggle-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.home-btn:active, .sound-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* ─── Buttons Design System ────────────────────────── */
+.action-btn {
+  padding: clamp(12px, 2.8vw, 16px) clamp(22px, 5vw, 36px);
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  font-weight: 700;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, opacity 0.2s;
+  white-space: nowrap;
+  min-height: 46px;
+}
+
+@media (hover: hover) {
+  .action-btn:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.03);
+  }
+}
+
+.action-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-start {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 8px 22px rgba(99, 102, 241, 0.35);
+}
+
+.btn-clear {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
+.btn-check {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+}
+
+.btn-next {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
+}
+
+.btn-replay {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.3);
+}
+
+.btn-random-shape {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+}
+
+/* ─── Activity Picker (home screen) ─────────────────── */
+.tools-menu-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Top-aligned rather than centred: with four bands of cards the page is
+     taller than the screen, and centring would crop the first heading. */
+  justify-content: flex-start;
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(60px, 9vw, 84px) clamp(16px, 4vw, 32px) clamp(24px, 5vw, 48px);
+  gap: clamp(16px, 3vw, 26px);
+}
+
+.tools-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.tools-footer-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.parent-panel-text {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #334155;
+}
+
+/* ─── Home screen sections ─────────────────────────── */
+.tools-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.5vw, 14px);
+}
+
+.tools-section-title {
+  font-size: clamp(0.95rem, 2.4vw, 1.15rem);
+  font-weight: 800;
+  color: #475569;
+  margin: 0;
+  padding-left: 4px;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* A rule trailing off after the label groups the cards below it without
+   needing a heavy box around each band. */
+.tools-section-title::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.45), rgba(148, 163, 184, 0));
+}
+
+.app-logo {
+  display: block;
+  width: clamp(180px, 34vw, 300px);
+  height: auto;
+  /* The artwork carries its own white outline, so it needs no backing. */
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.activation-logo {
+  width: clamp(160px, 50%, 240px);
+  margin-bottom: var(--space-sm);
+}
+
+.tools-main-title {
+  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+  font-weight: 900;
+  color: #1e293b;
+  margin: 0;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.tools-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(132px, 21vw, 188px), 1fr));
+  gap: clamp(10px, 1.8vw, 18px);
+  width: 100%;
+}
+
+/* Picture first, then a one or two word name. Real buttons, so they are
+   reachable by keyboard and announced properly. */
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: clamp(14px, 2.2vw, 20px) clamp(8px, 1.4vw, 14px);
+  border-radius: 24px;
+  border-style: solid;
+  border-width: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s;
+  box-shadow: 0 10px 26px -8px rgba(0, 0, 0, 0.12);
+}
+
+@media (hover: hover) {
+  .tool-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.tool-card:active {
+  transform: scale(0.97);
+}
+
+.tool-card-icon {
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  line-height: 1.1;
+}
+
+/* The card pictures are drawn images, sized in em so every breakpoint that
+   sets the icon's font-size below still scales them as it scaled the emoji.
+   Each is drawn inside a square with a transparent border of about 15%, so the
+   negative margin lets that border overlap the card's padding: the picture
+   reads bigger than the emoji did and the card stays exactly as tall (1.1em,
+   the emoji's line box), so all twelve still fit where they used to. */
+img.tool-card-icon {
+  display: block;
+  width: 1.6em;
+  height: 1.6em;
+  margin: -0.25em 0;
+  object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.tool-card-title {
+  font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.tool-card-subtitle {
+  font-size: clamp(0.7rem, 1.5vw, 0.82rem);
+  color: #475569;
+  font-weight: 600;
+}
+
+/* ─── Unified Stage Header ────────────────────────── */
+.stage-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: clamp(54px, 8vw, 70px) var(--space-md) clamp(16px, 3vw, 28px);
+  gap: var(--space-sm);
+  /* Height of everything stacked around the canvas: padding, header, tabs,
+     controls and the gaps between them. The canvas subtracts this from the
+     viewport so the action buttons always stay on screen. */
+  --stage-chrome: 312px;
+}
+
+/* Tools with extra rows around the canvas reserve more. Ordered so the most
+   crowded layout wins. */
+.stage-container:has(.shape-tracker-pill) {
+  --stage-chrome: 352px;
+}
+
+.stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+
+.back-btn {
+  background: white;
+  border: 2px solid rgba(255,255,255,0.9);
+  border-radius: 50%;
+  width: clamp(44px, 9vw, 50px);
+  height: clamp(44px, 9vw, 50px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .back-btn:hover {
+    transform: scale(1.08);
+  }
+}
+
+.back-btn:active {
+  transform: scale(0.95);
+}
+
+.tool-header-title-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 6px 18px;
+  border-radius: 50px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 2px solid white;
+}
+
+/* On an activity screen the title takes the whole width between the back and
+   settings buttons, so a longer name (Linia pozioma, Koło i kreska) does not
+   resize the pill as the child steps through the items. The menus keep a
+   pill the size of their title: their header shares its row with the stars. */
+.stage-container .tool-header-title-badge {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+  margin: 0 8px;
+  justify-content: center;
+}
+
+.stage-title {
+  font-size: clamp(1.15rem, 4vw, 1.5rem);
+  font-weight: 800;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shape-icon-badge {
+  font-size: 1.35rem;
+}
+
+/* A drawn picture in the header badge, where an emoji used to be: sized from
+   the badge's font-size, with the margin taking back what it adds in height. */
+img.shape-icon-img {
+  display: block;
+  width: 1.6em;
+  height: 1.6em;
+  margin: -0.3em 0;
+  object-fit: contain;
+  -webkit-user-drag: none;
+}
+
+.settings-toggle-btn {
+  background: white;
+  border: 2px solid rgba(255,255,255,0.9);
+  border-radius: 50%;
+  width: clamp(44px, 9vw, 50px);
+  height: clamp(44px, 9vw, 50px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .settings-toggle-btn:hover {
+    transform: scale(1.08);
+  }
+}
+
+.settings-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.settings-badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #6366f1;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+/* ─── Mode Tabs ───────────────────────────────────── */
+.shapes-mode-tabs {
+  display: flex;
+  padding: 5px;
+  gap: 6px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.shapes-tab-btn {
+  border: none;
+  background: transparent;
+  /* Tap targets for small fingers: 44px minimum, not the 32px the padding
+     alone produced. */
+  min-height: 44px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.shapes-tab-btn.active {
+  background: #1e293b;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* ─── Canvas Wrapper ──────────────────────────────── */
+.canvas-wrapper {
+  position: relative;
+  width: 100%;
+  /* Never taller than the space left over once the header, tabs and controls
+     have taken theirs - otherwise the action buttons fall below the fold. */
+  max-width: min(540px, 100dvh - var(--stage-chrome, 250px), 92vw);
+  min-width: 0;
+  aspect-ratio: 1;
+  background: white;
+  border-radius: 32px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08), inset 0 0 20px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.canvas-element {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 32px;
+  touch-action: none;
+}
+
+.svg-guide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ─── Shapes Helper Grid ──────────────────── */
+.shapes-grid-background {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid-line-h,
+.grid-line-v {
+  position: absolute;
+  /* Paler than the trace line (#cbd5e1), so the shape to follow is the
+     strongest grey on the canvas. They used to be the same colour. */
+  background: #f1f5f9;
+}
+
+.grid-line-h {
+  left: 0;
+  width: 100%;
+  height: 2px;
+}
+
+.grid-line-v {
+  top: 0;
+  height: 100%;
+  width: 2px;
+}
+
+.grid-line-h.line-top { top: 20%; }
+.grid-line-h.line-bottom { top: 80%; }
+.grid-line-v.line-center { left: 50%; }
+
+/* The middle line is the one children line their shapes up against */
+.grid-line-h.line-mid {
+  top: 50%;
+  height: 3px;
+  background: #e2e8f0;
+}
+
+/* ─── Start Dot & Canvas Nudge ────────────── */
+.shape-start-dot {
+  animation: start-dot-pulse 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes start-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 0.95; }
+}
+
+.canvas-nudge-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: #1e293b;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 50px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  max-width: calc(100% - 32px);
+  text-align: center;
+  line-height: 1.35;
+  pointer-events: none;
+  animation: nudge-in 0.25s ease-out;
+}
+
+@keyframes nudge-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ─── Path Animation ──────────────────────────────── */
+.path-animate {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 3.2s ease-in-out forwards;
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes move-dot {
+  0% { offset-distance: 0%; opacity: 0; }
+  2% { opacity: 1; }
+  98% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* ─── Controls Bar ────────────────────────────────── */
+.controls, .shapes-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* See ButtonSwap.jsx: every mode's buttons share one cell, so the slot is as
+   wide as the widest of them and the buttons either side never move. */
+.button-swap {
+  display: grid;
+  gap: inherit;
+}
+
+.button-swap-item {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: inherit;
+}
+
+.button-swap-item.is-off {
+  visibility: hidden;
+}
+
+.btn-secondary-round {
+  background: white;
+  color: #334155;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.shape-tracker-pill {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+/* ─── Menu Screen (Letter Selection) ──────────────── */
+.menu-screen-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(56px, 8vw, 84px) clamp(16px, 4vw, 32px) clamp(30px, 6vw, 60px);
+  gap: 20px;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(72px, 18vw, 124px), 1fr));
+  gap: clamp(10px, 2.5vw, 18px);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.letter-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  border-width: 2.5px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 8px;
+}
+
+@media (hover: hover) {
+  .letter-btn:hover {
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.letter-btn:active {
+  transform: scale(0.95);
+}
+
+.letter-btn .letter-face {
+  font-family: var(--font-letters);
+  font-size: clamp(1.7rem, 5vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* The case not being practised, shown beside the one that is. Sized in em so it
+   follows the glyph through every breakpoint override of the tile. */
+.letter-btn-other {
+  font-size: 0.62em;
+  font-weight: 700;
+  opacity: 0.45;
+  margin-left: 0.22em;
+}
+
+.letter-btn .icon {
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  margin-top: 4px;
+}
+
+/* ─── Feedback Modals ─────────────────────────────── */
+.feedback-modal, .shapes-settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* A plain shade. A full-screen backdrop blur is one of the most expensive
+     things to ask of a low-end Android GPU, and looked almost the same. */
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.25s ease-out;
+  padding: var(--space-md);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.feedback-content {
+  background: white;
+  padding: clamp(28px, 6vw, 44px);
+  border-radius: 32px;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+  border: 4px solid;
+  max-width: 480px;
+  width: 100%;
+}
+
+.feedback-content h2 {
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+  font-weight: 900;
+  margin: 0 0 8px;
+}
+
+.feedback-content p {
+  font-size: 1.05rem;
+  color: #475569;
+  margin: 0;
+}
+
+/* ─── Settings Modal (Shapes & Arrows) ────────────── */
+.shapes-settings-modal {
+  background: white;
+  border-radius: 32px;
+  max-width: 660px;
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.settings-modal-header h2 {
+  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+}
+
+.close-modal-btn:hover {
+  background: #f1f5f9;
+}
+
+.settings-quick-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #f8fafc;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.quick-chip-btn {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.quick-chip-btn.active,
+.quick-chip-btn:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+  background: #eef2ff;
+}
+
+.shapes-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.shape-select-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: inherit;
+  padding: 12px 8px;
+  border-radius: 20px;
+  border: 2px solid #e2e8f0;
+  cursor: pointer;
+  position: relative;
+  background: #f8fafc;
+  transition: all 0.18s;
+}
+
+.shape-select-card.selected {
+  background: white;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.shape-select-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #10b981;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-shape-svg {
+  width: 48px;
+  height: 48px;
+  margin: 6px 0;
+}
+
+.shape-select-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  text-align: center;
+}
+
+.settings-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.selected-summary-text {
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+/* ─── Arrows Tool ─────────────────────────────────── */
+.arrow-card-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 22px;
+}
+
+.arrow-hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 1;
+  border-radius: 36px;
+  background: white;
+  border-width: 4px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  position: relative;
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.arrow-graphic-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68%;
+  height: 68%;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.arrow-svg-element {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
+}
+
+.arrow-labels-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+  gap: 4px;
+}
+
+.arrow-dir-label {
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.arrow-col-label {
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.arrow-controls-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ─── Arrows Matrix / Grid ────────────────────────── */
+.arrow-grid-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 20px;
+}
+
+.grid-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.grid-size-btn {
+  border: none;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-weight: 800;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s;
+}
+
+.grid-size-btn.active {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+}
+
+.arrows-matrix-grid {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 28px;
+  background: white;
+  width: 100%;
+  max-width: 520px;
+}
+
+.matrix-arrow-cell {
+  aspect-ratio: 1;
+  border-radius: 18px;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.cell-number {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.matrix-arrow-rotator {
+  width: 60%;
+  height: 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.matrix-arrow-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* ─── Arrows Quiz ─────────────────────────────────── */
+.arrow-quiz-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 18px;
+}
+
+.quiz-score-badge {
+  padding: 6px 18px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.arrow-quiz-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  border-radius: 28px;
+  background: white;
+  border-width: 4px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.arrow-svg-element.quiz-size {
+  width: 110px;
+  height: 110px;
+}
+
+.quiz-instruction {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 12px 0 0;
+}
+
+.quiz-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.quiz-dir-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 20px;
+  border: 2px solid white;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1e293b;
+  transition: transform 0.18s, background-color 0.18s;
+}
+
+.quiz-dir-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  background: #f1f5f9;
+}
+
+.quiz-btn-icon {
+  font-size: 1.3rem;
+}
+
+.quiz-compass {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(64px, auto));
+  gap: 10px;
+  max-width: 440px;
+}
+
+.quiz-compass .quiz-dir-btn {
+  min-height: 64px;
+  padding: 10px 8px;
+  font-size: 0.92rem;
+}
+
+.quiz-compass-centre {
+  grid-row: 2;
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+}
+
+/* Reserved for the toast below, so an answer does not add a row. */
+.quiz-feedback-slot {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quiz-feedback-toast {
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  animation: fadeIn 0.2s;
+}
+
+.quiz-feedback-toast.correct {
+  background: #10b981;
+  color: white;
+}
+
+.quiz-feedback-toast.wrong {
+  background: #ef4444;
+  color: white;
+}
+
+/* ─── Settings Modal Sections ─────────────────────── */
+.settings-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-section h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #334155;
+  margin: 0;
+}
+
+.directions-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.dir-select-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+  transition: all 0.15s;
+}
+
+.dir-select-pill.selected {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+.colors-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.color-select-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 2px solid;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.color-swatch-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.text-link-btn {
+  background: transparent;
+  border: none;
+  color: #6366f1;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.settings-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+/* Short tablet screens: the arrow card and the letter picker shrink so
+   nothing needs scrolling to reach. */
+
+
+/* ─── Responsive Optimizations ────────────────────── */
+
+
+/* ─── Word Scramble Tool (Rozsypanka Literowa) ─────── */
+
+.scramble-play-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2.5vw, 22px);
+  padding: clamp(16px, 3vw, 32px) clamp(16px, 3vw, 36px);
+  margin: clamp(8px, 1.5vw, 14px) auto;
+  max-width: 680px;
+  width: calc(100% - 24px);
+}
+
+.scramble-image-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The picture is what the child reads the word from, and the illustrations are
+   detailed, so the circle takes whatever height the screen has left: --pic is
+   the screen height minus everything else on it with the longest word showing
+   (the same idea as --stage-chrome for the canvases). It does not depend on
+   the word, so it stays one size as the child moves through them. Sylaby has
+   mode tabs and a star row on top of that, hence its own, larger subtraction.
+   Re-measure the subtracted number when a row is added to either screen. */
+.scramble-illustration-circle {
+  --pic: clamp(112px, min(34vw, 100dvh - 725px), 220px);
+  width: var(--pic);
+  height: var(--pic);
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 4px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.syllables-stage .scramble-illustration-circle {
+  --pic: clamp(112px, min(34vw, 100dvh - 766px), 220px);
+}
+
+.scramble-emoji-display {
+  width: 72%;
+  height: 72%;
+  font-size: clamp(52px, 9vw, 82px);
+  line-height: 1;
+  user-select: none;
+}
+
+.scramble-hint-text {
+  font-size: clamp(12px, 2vw, 14px);
+  color: #64748B;
+  text-align: center;
+  max-width: 480px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 8px 14px;
+  background: rgba(0,0,0,0.025);
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.07);
+}
+
+.scramble-slots-row {
+  --slot-gap: clamp(5px, 1.5vw, 10px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--slot-gap);
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 64px;
+}
+
+.scramble-slots-row.shake {
+  animation: scramble-shake 0.55s ease-in-out;
+}
+
+@keyframes scramble-shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  30%       { transform: translateX(8px); }
+  45%       { transform: translateX(-6px); }
+  60%       { transform: translateX(6px); }
+  75%       { transform: translateX(-4px); }
+  90%       { transform: translateX(4px); }
+}
+
+/* A long word's slots narrow until they share one row (--slots is the number
+   of letters, set by the tool), down to --slot-min, where they wrap instead.
+   The row would otherwise break in two for ZJEŻDŻALNIA on a tablet and push
+   everything under it down. Only the slots: the letter tiles below are what a
+   finger aims at, so those keep their size and wrap. */
+.scramble-slot {
+  width: clamp(42px, 7.5vw, 58px);
+  max-width: max(var(--slot-min, 34px), (100% - (var(--slots, 1) - 1) * var(--slot-gap)) / var(--slots, 1));
+  height: clamp(50px, 9.5vw, 66px);
+  padding: 0;
+  font-family: inherit;
+  border-radius: 12px;
+  border: 3px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.4);
+}
+
+.scramble-slot.empty {
+  border-style: dashed;
+  border-width: 2.5px;
+}
+
+.scramble-slot.filled:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+}
+
+.scramble-slot-char {
+  font-size: clamp(20px, 4vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  font-family: var(--font-ui);
+}
+
+.scramble-slot-placeholder {
+  font-size: clamp(18px, 3.5vw, 28px);
+  color: #CBD5E1;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scramble-tiles-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.scramble-pool-title {
+  font-size: clamp(12px, 1.8vw, 14px);
+  color: #475569;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* The instruction line, which the answer replaces: one fixed-height row, so
+   the card does not grow when the answer appears. */
+.scramble-message-row {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scramble-message-row .scramble-pool-title {
+  margin: 0;
+}
+
+.scramble-message-row .scramble-feedback-banner {
+  width: auto;
+  max-width: 100%;
+  padding: 7px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scramble-tiles-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1.5vw, 10px);
+  justify-content: center;
+}
+
+.scramble-letter-tile {
+  width: clamp(44px, 8.5vw, 60px);
+  height: clamp(52px, 10vw, 68px);
+  border-radius: 12px;
+  border: 2.5px solid #E2E8F0;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(20px, 4vw, 32px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s, background 0.15s;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  letter-spacing: -0.5px;
+  font-family: var(--font-ui);
+  user-select: none;
+  color: #1E293B;
+}
+
+.scramble-letter-tile:not(.used):hover {
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  background: #F8FAFC;
+}
+
+.scramble-letter-tile:not(.used):active {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.scramble-letter-tile.used {
+  opacity: 0.28;
+  cursor: default;
+  box-shadow: none;
+  background: #F1F5F9;
+  border-color: transparent;
+  transform: none;
+}
+
+.scramble-feedback-banner {
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: clamp(13px, 2vw, 15px);
+  font-weight: 600;
+  text-align: center;
+  animation: scramble-banner-in 0.3s ease-out;
+}
+
+@keyframes scramble-banner-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scramble-feedback-banner.success {
+  background: #F0FDF4;
+  color: #15803D;
+  border: 2px solid #86EFAC;
+}
+
+.scramble-feedback-banner.error {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 2px solid #FCA5A5;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.settings-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+  padding: 0 2px;
+}
+
+.settings-toggle-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  transition: background 0.15s;
+}
+
+.settings-checkbox-label:hover {
+  background: #EFF6FF;
+}
+
+.settings-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* #4f46e5, not --primary-color: white on #6366f1 is 4.47:1, just short. */
+.quick-chip-btn.active {
+  background: var(--primary-hover);
+  color: #FFFFFF;
+  border-color: var(--primary-hover);
+  font-weight: 700;
+}
+
+.btn-hint {
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  color: #92400E;
+  border: 2px solid #F59E0B;
+}
+.btn-hint:hover {
+  background: linear-gradient(135deg, #FDE68A, #FCD34D);
+}
+
+/* Short tablet screens: shrink the illustration and tiles so the word, the
+   letter pool and the action buttons all stay on one screen. */
+
+
+
+
+/* Nine cards in four bands. On a laptop screen the whole catalogue should be
+   reachable without scrolling, so the picker tightens a notch - but only as
+   much as it needs to, or the cards stop looking tappable. */
+
+
+/* Small tablets and phones in landscape: the picker has nine cards, so it
+   scrolls here rather than shrinking to the point of being hard to tap. The
+   cards still tighten, they just stop pretending to fit. */
+
+
+/* ─── Word pictures ────────────────────────────────── */
+/* Bundled drawings, so a picture looks the same on every device and is crisp
+   at any size. .picture-glyph is the fallback when there is no file for it. */
+.picture {
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* A word illustration is a white disc with the drawing on it. It fills its
+   round frame edge to edge; the radius only trims the hairline of antialiasing
+   where the disc meets the frame's border. */
+.picture-word {
+  border-radius: 50%;
+}
+
+.picture-glyph {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ─── Stars & Stickers ─────────────────────────────── */
+.star-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.star-badge-star.earned { color: #F59E0B; }
+/* The stars still to earn are the goal, so they must be visible: 3.7:1 on
+   white, where the old translucent grey was 1.5:1. */
+.star-badge-star.empty { color: #78869B; }
+
+.star-badge-xs { font-size: 0.72rem; }
+.star-badge-sm { font-size: 0.95rem; }
+.star-badge-lg { font-size: 1.4rem; }
+
+.star-counter-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: clamp(44px, 9vw, 50px);
+  padding: 0 14px;
+  border-radius: 50px;
+  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  color: #B45309;
+  font-size: 0.95rem;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .star-counter-btn:hover { transform: scale(1.06); }
+}
+.star-counter-btn:active { transform: scale(0.95); }
+
+.star-counter-icon { font-size: 1.05rem; }
+
+/* Digits all one width, and room for three of them, so earning a star does not
+   nudge the pill and the mute button beside it. */
+.star-counter-value {
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: center;
+}
+
+/* Install offer on the home screen, for the adult setting up a computer or a
+   classroom board. Shaped like the star counter beside it. */
+.install-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: clamp(44px, 9vw, 50px);
+  padding: 0 16px;
+  border-radius: 50px;
+  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--primary-color);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .install-btn:hover { transform: scale(1.06); }
+}
+.install-btn:active { transform: scale(0.95); }
+
+/* The sticker book: a picture to stick stickers on (StickerBook.jsx). The
+   picture is the hero, sized off the height left like a drawing canvas, so the
+   tray under it never falls below the fold. */
+.sticker-book-container {
+  justify-content: flex-start;
+  max-width: 900px;
+  --stage-chrome: 268px;
+}
+
+.sticker-book-container .sticker-book-title {
+  justify-content: center;
+}
+
+.sticker-scene-picker {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.sticker-scene-btn {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid white;
+  overflow: hidden;
+  cursor: pointer;
+  background: white;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.sticker-scene-btn svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The picked picture keeps its size and gains a ring in its own colour, so the
+   row never shifts as the child switches between them. */
+.sticker-scene-btn.is-active {
+  border-color: var(--frame);
+  box-shadow: 0 0 0 3px white, 0 0 0 6px var(--frame);
+}
+.sticker-scene-btn:active { transform: scale(0.92); }
+
+.sticker-scene {
+  position: relative;
+  width: min(100%, (100dvh - var(--stage-chrome)) * 4 / 3);
+  aspect-ratio: 4 / 3;
+  flex-shrink: 0;
+  border-radius: 28px;
+  border: 5px solid var(--frame);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  background: white;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sticker-scene-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 15% of the picture's width: STICKER_SHARE in StickerBook.jsx. */
+.placed-sticker {
+  position: absolute;
+  width: calc(15% * var(--scale, 1));
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
+  touch-action: none;
+  cursor: grab;
+  filter: drop-shadow(0 3px 0 white) drop-shadow(0 -3px 0 white) drop-shadow(3px 0 0 white)
+    drop-shadow(-3px 0 0 white) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
+}
+
+/* While it is being dragged it is drawn under the finger instead. */
+.placed-sticker.is-lifted { visibility: hidden; }
+
+.placed-sticker-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.placed-sticker-inner .picture {
+  display: block;
+  pointer-events: none;
+}
+
+.placed-sticker.is-new .placed-sticker-inner {
+  animation: sticker-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dance-hop { animation: sticker-hop 0.9s ease-out; }
+.dance-spin { animation: sticker-spin 0.9s cubic-bezier(0.34, 1.3, 0.64, 1); }
+.dance-wiggle { animation: sticker-wiggle 0.9s ease-in-out; }
+
+@keyframes sticker-hop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  15% { transform: translateY(0) scale(1.15, 0.85); }
+  35% { transform: translateY(-40%) scale(0.92, 1.1); }
+  55% { transform: translateY(0) scale(1.1, 0.9); }
+  70% { transform: translateY(-14%) scale(1); }
+  85% { transform: translateY(0) scale(1.04, 0.96); }
+}
+
+@keyframes sticker-spin {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(200deg) scale(1.25); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes sticker-wiggle {
+  0%, 100% { transform: rotate(0) scale(1); }
+  15% { transform: rotate(-16deg) scale(1.12); }
+  30% { transform: rotate(14deg) scale(1.12); }
+  45% { transform: rotate(-12deg) scale(1.1); }
+  60% { transform: rotate(10deg) scale(1.06); }
+  80% { transform: rotate(-4deg) scale(1.02); }
+}
+
+.sticker-ghost {
+  position: fixed;
+  z-index: 500;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.12);
+  filter: drop-shadow(0 3px 0 white) drop-shadow(0 -3px 0 white) drop-shadow(3px 0 0 white)
+    drop-shadow(-3px 0 0 white) drop-shadow(0 14px 14px rgba(0, 0, 0, 0.3));
+}
+
+.sticker-ghost .picture { display: block; }
+
+/* Always there, faint, so nothing appears when a drag starts; it lights up
+   while a sticker is being carried and grows when one is over it. */
+.sticker-bin {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.55);
+  color: #64748B;
+  opacity: 0.55;
+  pointer-events: none;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s, background 0.2s;
+}
+
+.sticker-bin.is-ready {
+  opacity: 1;
+  background: white;
+  color: #DC2626;
+}
+
+.sticker-bin.is-hot {
+  transform: scale(1.3);
+  background: #FEE2E2;
+}
+
+.sticker-scene-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1;
+  pointer-events: none;
+  animation: sticker-hint 1.2s ease-in-out infinite;
+}
+
+@keyframes sticker-hint {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 10px); }
+}
+
+.sticker-tray {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 900px);
+  padding: 8px 10px;
+  border-radius: 26px;
+  flex-shrink: 0;
+}
+
+.sticker-next {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #FEF3C7;
+}
+
+.sticker-next-ring,
+.star-counter-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.sticker-next-track {
+  fill: none;
+  stroke: rgba(245, 158, 11, 0.22);
+  stroke-width: 4;
+}
+
+.sticker-next-fill {
+  fill: none;
+  stroke: #F59E0B;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s ease;
+}
+
+.sticker-next-picture { font-size: 34px; }
+.sticker-next-done { font-size: 30px; line-height: 1; }
+
+/* Stickers still to be won: dark shapes to guess at, not greyed-out pictures. */
+.sticker-silhouette {
+  filter: brightness(0);
+  opacity: 0.2;
+}
+
+.sticker-tray-list {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  touch-action: pan-x;
+  padding: 2px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.sticker-tray-item {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 3px solid #FDE68A;
+  border-radius: 18px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: pan-x;
+  scroll-snap-align: start;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.15s ease;
+}
+
+.sticker-tray-item:active:not(.is-locked) { transform: scale(0.9); }
+
+.sticker-tray-item.is-locked {
+  border-color: #E2E8F0;
+  background: #F8FAFC;
+  cursor: default;
+}
+
+.sticker-tray-picture {
+  font-size: 40px;
+  pointer-events: none;
+}
+
+.sticker-shake { display: inline-block; animation: sticker-shake 0.45s ease; }
+
+@keyframes sticker-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+/* The star in the corner pill carries the same ring: how close the next sticker
+   is, seen from any game. Laid over the icon, so the pill keeps its size. */
+.star-counter-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: -6px;
+}
+
+.star-counter-star {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  -webkit-user-drag: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dance-hop, .dance-spin, .dance-wiggle, .sticker-scene-hint, .placed-sticker.is-new .placed-sticker-inner {
+    animation: none;
+  }
+}
+
+.sticker-unlock-content { max-width: 420px; }
+.sticker-unlock-emoji {
+  display: block;
+  width: clamp(4rem, 16vw, 6rem);
+  height: clamp(4rem, 16vw, 6rem);
+  margin: 6px auto 4px;
+  font-size: clamp(4rem, 16vw, 6rem);
+  line-height: 1.1;
+  animation: sticker-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes sticker-pop {
+  from { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.sticker-unlock-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* ─── Znajdz litere ────────────────────────────────── */
+.find-target {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2.5vw, 18px);
+  padding: 10px 20px;
+  border-radius: 50px;
+}
+
+.find-target-label {
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
+  font-weight: 700;
+  color: #475569;
+}
+
+.find-target-letter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Wide enough for m and W, so the pill keeps its size from round to round. */
+  min-width: 1.6em;
+  gap: 8px;
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  font-weight: 900;
+  color: #0E7490;
+  font-family: inherit;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.find-progress-pill {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+.find-grid {
+  display: grid;
+  gap: clamp(8px, 2vw, 14px);
+  width: 100%;
+  /* Tiles are square, so the rows decide how tall the board wants to be: the
+     width follows from the height left over once everything else on the
+     screen (--grid-chrome) is taken off. The tool sets the row and column
+     counts; 14px is the largest gap. */
+  --grid-chrome: 352px;
+  max-width: min(
+    520px,
+    (100dvh - var(--grid-chrome, 352px) - (var(--grid-rows, 3) - 1) * 14px) / var(--grid-rows, 3) *
+      var(--grid-cols, 3) + (var(--grid-cols, 3) - 1) * 14px
+  );
+}
+
+.find-tile {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  /* The letter inside is sized off the tile (cqi), not the screen: a 160px
+     tile used to hold a 40px letter. */
+  container-type: inline-size;
+  font-family: var(--font-letters);
+  font-size: clamp(1.6rem, 6vw, 2.6rem);
+  font-weight: 800;
+  color: #1E293B;
+  background: white;
+  border: 3px solid #E2E8F0;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s, border-color 0.18s;
+  /* Comfortably past the 44px minimum even on a small phone. */
+  min-height: 56px;
+}
+
+.find-tile-letter {
+  font-size: clamp(1.6rem, 56cqi, 6rem);
+  line-height: 1;
+}
+
+@media (hover: hover) {
+  .find-tile:not(:disabled):hover { transform: translateY(-3px) scale(1.04); }
+}
+
+.find-tile.found {
+  background: #ECFDF5;
+  border-color: #10B981;
+  color: #047857;
+  cursor: default;
+}
+
+.find-tile.wrong {
+  background: #FEF2F2;
+  border-color: #EF4444;
+  color: #B91C1C;
+  animation: scramble-shake 0.5s ease-in-out;
+}
+
+/* ─── Pierwsza gloska ──────────────────────────────── */
+.sound-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: clamp(14px, 3vw, 24px);
+  border-radius: 28px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+
+/* Sized like .scramble-illustration-circle: the height left on the screen. */
+.sound-prompt-picture {
+  --pic: clamp(112px, min(46vw, 100dvh - 640px), 260px);
+  position: relative;
+  width: var(--pic);
+  height: var(--pic);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 4px solid;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+/* Sized as a share of its circle, so the drawing scales with the card. */
+.sound-prompt-emoji { width: 76%; height: 76%; }
+
+.sound-prompt-letter {
+  font-family: inherit;
+  font-size: clamp(3rem, 12vw, 5rem);
+  font-weight: 900;
+  color: #BE123C;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+
+.sound-prompt-question {
+  margin: 0;
+  font-size: clamp(0.9rem, 2.4vw, 1.08rem);
+  font-weight: 700;
+  color: #334155;
+}
+
+.sound-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(10px, 2.5vw, 16px);
+  width: 100%;
+  max-width: 520px;
+}
+
+.sound-letter-btn {
+  min-width: clamp(64px, 15vw, 92px);
+  min-height: clamp(64px, 15vw, 92px);
+  font-family: inherit;
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+  font-weight: 900;
+  color: #1E293B;
+  background: white;
+  border: 3px solid #E2E8F0;
+  border-radius: 22px;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.07);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Up to four picture answers, two to a row - hence half the height left - so
+   each is large enough to make out. --pic is set on the row because the row's
+   width follows from it. A short, wide screen puts all four on one row
+   instead (the max-height: 710px block). */
+.sound-options:has(> .sound-picture-btn) {
+  --pic: clamp(88px, min(42vw, (100dvh - 510px) / 2), 180px);
+  max-width: calc(2 * var(--pic) + 16px);
+}
+
+.sound-picture-btn {
+  width: var(--pic);
+  height: var(--pic);
+  box-sizing: border-box;
+  padding: 0;
+  font-size: clamp(44px, 10vw, 66px);
+  background: white;
+  border: 4px solid;
+  border-radius: 24px;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .sound-letter-btn:not(:disabled):hover,
+  .sound-picture-btn:not(:disabled):hover { transform: translateY(-4px) scale(1.05); }
+}
+
+.sound-letter-btn.wrong,
+.sound-picture-btn.wrong {
+  background: #FEF2F2;
+  border-color: #EF4444;
+  animation: scramble-shake 0.5s ease-in-out;
+}
+
+/* ─── Pary liter ───────────────────────────────────── */
+.pairs-progress-pill {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+.pairs-grid {
+  display: grid;
+  gap: clamp(8px, 2vw, 14px);
+  width: 100%;
+  /* As .find-grid, for 3:4 cards: a row is 4/3 as tall as a column is wide. */
+  --grid-chrome: 278px;
+  max-width: min(
+    520px,
+    (100dvh - var(--grid-chrome, 278px) - (var(--grid-rows, 3) - 1) * 14px) / (var(--grid-rows, 3) * 4 / 3) *
+      var(--grid-cols, 3) + (var(--grid-cols, 3) - 1) * 14px
+  );
+}
+
+.pair-card {
+  aspect-ratio: 3 / 4;
+  min-height: 56px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  perspective: 700px;
+}
+
+.pair-card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.34, 1.3, 0.64, 1);
+  transform-style: preserve-3d;
+}
+
+.pair-card.flipped .pair-card-inner { transform: rotateY(180deg); }
+
+.pair-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-weight: 900;
+}
+
+.pair-card-back {
+  background: linear-gradient(135deg, #A855F7, #7E22CE);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  border: 3px solid #C084FC;
+}
+
+.pair-card-front {
+  background: white;
+  border: 3px solid #E9D5FF;
+  color: #6B21A8;
+  font-size: clamp(1.5rem, 6vw, 2.4rem);
+  transform: rotateY(180deg);
+}
+
+.pair-card-front.is-picture { font-size: clamp(1.8rem, 7vw, 2.8rem); }
+
+.pair-card.matched .pair-card-front {
+  border-color: #10B981;
+  background: #ECFDF5;
+}
+
+/* ─── Sylaby ───────────────────────────────────────── */
+.syllable-slot {
+  min-width: clamp(58px, 13vw, 84px);
+  height: clamp(50px, 10vw, 66px);
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: clamp(1.05rem, 3.4vw, 1.5rem);
+  font-weight: 900;
+  border: 3px solid #CBD5E1;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.syllable-slot.empty { border-style: dashed; border-width: 2.5px; cursor: default; }
+
+.syllable-tile {
+  min-width: clamp(58px, 13vw, 84px);
+  height: clamp(50px, 10vw, 66px);
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: clamp(1.05rem, 3.4vw, 1.5rem);
+  font-weight: 900;
+  color: #1E293B;
+  background: white;
+  border: 3px solid #E2E8F0;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .syllable-tile:not(:disabled):hover { transform: translateY(-3px) scale(1.05); }
+}
+
+.syllable-tile.used {
+  opacity: 0.35;
+  border-color: transparent;
+  cursor: default;
+  box-shadow: none;
+}
+
+.count-options {
+  display: flex;
+  gap: clamp(10px, 3vw, 18px);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.count-option-btn {
+  width: clamp(64px, 15vw, 88px);
+  height: clamp(64px, 15vw, 88px);
+  font-family: inherit;
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+  font-weight: 900;
+  background: white;
+  border: 4px solid;
+  border-radius: 22px;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.07);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .count-option-btn:not(:disabled):hover { transform: translateY(-4px) scale(1.05); }
+}
+
+.settings-hint-text {
+  font-size: 0.85rem;
+  color: #64748B;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+/* ─── Pattern families (szlaczki) ─────────────────── */
+
+/* Four cards, two across on a tablet: big enough that the animal reads from
+   arm's length, since that is what a child picks by. */
+.family-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: clamp(12px, 2.5vw, 20px);
+  width: 100%;
+  max-width: 720px;
+}
+
+.family-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: clamp(14px, 2.4vh, 22px) 16px clamp(12px, 2vh, 18px);
+  border: 3px solid;
+  border-radius: 26px;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .family-card:hover { transform: translateY(-4px) scale(1.02); }
+}
+
+.family-card-emoji {
+  font-size: clamp(2.4rem, 7vh, 3.4rem);
+  line-height: 1;
+}
+
+/* The animal is a drawn picture sized in em, so the breakpoint below that
+   shrinks the font-size shrinks it too. It is a whole little scene (water under
+   the dolphin, a thread over the spider), so it gets more room than the emoji
+   did: the cards grow by about 15px and both rows still fit a 1024x600 tablet
+   (at 1.6em they did not, by 11px). */
+img.family-card-emoji {
+  display: block;
+  width: 1.45em;
+  height: 1.45em;
+  margin-bottom: -0.1em;
+  object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.family-progress-star {
+  width: 1.3em;
+  height: 1.3em;
+  margin-right: 2px;
+  vertical-align: -0.35em;
+  -webkit-user-drag: none;
+}
+
+.family-card-title {
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  font-weight: 900;
+}
+
+.family-card-subtitle {
+  font-size: clamp(0.75rem, 1.7vw, 0.88rem);
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Three szlaczki from inside the family, stacked as a taste of what it holds */
+.family-card-previews {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin: 6px 0 4px;
+}
+
+.family-preview-svg {
+  width: 100%;
+  height: clamp(20px, 3.4vh, 30px);
+}
+
+.family-card-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.family-progress-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+}
+
+.family-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.4s ease-out;
+}
+
+.family-progress-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+/* The whole family fits in one row of chips, so the patterns are a visible
+   sequence - rows first, the picture last - rather than a hidden picker. */
+.pattern-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.pattern-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.pattern-chip.active {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: scale(1.04);
+}
+
+.pattern-chip-icon { font-size: 1rem; }
+
+/* A row pattern is wider than it is tall, so its canvas is too: the wrapper
+   takes its shape from the pattern's own viewBox. */
+.pattern-canvas-wrapper {
+  aspect-ratio: var(--pattern-aspect, 1);
+  max-width: min(
+    720px,
+    92vw,
+    calc((100dvh - var(--stage-chrome, 250px)) * var(--pattern-aspect, 1))
+  );
+}
+
+/* A newly revealed ring on a "coraz większe" pattern swells into place, so a
+   child sees that something was added rather than finding it already there. */
+.pattern-ring-fresh {
+  animation: ring-appear 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes ring-appear {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.canvas-nudge-pill.ring-hint {
+  background: #0f766e;
+}
+
+/* Writing lines for the row patterns: the band the szlaczek sits in, with a
+   lighter line through the middle to aim at. */
+.pattern-rules {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pattern-rule-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #e2e8f0;
+}
+
+.pattern-rule-line.rule-top { top: 25%; }
+.pattern-rule-line.rule-bottom { top: 80%; }
+
+.pattern-rule-line.rule-mid {
+  top: 52.5%;
+  height: 0;
+  border-top: 2px dashed #eef2f7;
+  background: none;
+}
+
+/* Header, tabs, chip row and controls, measured in the browser. More specific
+   than the :has(.shape-tracker-pill) rule above, and after it, so this tool's
+   own measurement wins. Re-measure it if a row is added or
+   removed - guessing is what pushes the Sprawdź button below the fold. */
+.stage-container.patterns-stage {
+  --stage-chrome: 467px;
+  max-width: 780px;
+}
+
+/* Short screens: the new pickers shrink like the rest of the app. */
+
+/* ─── Activation Screen ───────────────────── */
+/* The only screen here laid out for reading rather than for tapping: a single
+   column, a measure that stops around 46 characters, and text sized for an
+   adult holding the tablet rather than a child leaning over it. */
+.activation-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-md);
+  padding-top: max(var(--space-lg), env(safe-area-inset-top));
+  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
+}
+
+.activation-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 440px;
+  padding: clamp(24px, 5vw, 38px) clamp(20px, 5vw, 34px);
+}
+
+.activation-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #eef2ff, #ede9fe);
+  color: var(--primary-color);
+  margin-bottom: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.activation-icon-warn {
+  background: linear-gradient(135deg, #fef3c7, #fee2e2);
+  color: #b45309;
+}
+
+.activation-title {
+  font-size: clamp(1.25rem, 4vw, 1.55rem);
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 8px;
+}
+
+.activation-lead {
+  font-size: clamp(0.9rem, 2.4vw, 1rem);
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-md);
+  max-width: 34em;
+}
+
+.activation-label {
+  align-self: flex-start;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+}
+
+/* Monospaced and widely tracked, because the job here is to compare what is on
+   the screen against what is printed on a card, character by character. */
+.activation-input {
+  width: 100%;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: clamp(1.15rem, 4.4vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--text-main);
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px 12px;
+  min-height: 56px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+  /* The one place in the app where selecting text is the point. */
+  user-select: text;
+}
+
+.activation-input::placeholder {
+  color: #cbd5e1;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.activation-input:focus {
+  border-color: var(--primary-color);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
+}
+
+.activation-input.has-error {
+  border-color: #f87171;
+  background: #fff5f5;
+}
+
+.activation-input:disabled {
+  opacity: 0.6;
+}
+
+.activation-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin: 12px 0 0;
+}
+
+.activation-error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.activation-submit {
+  width: 100%;
+  margin-top: var(--space-md);
+  gap: 8px;
+}
+
+.activation-spinner {
+  animation: activation-spin 0.9s linear infinite;
+}
+
+@keyframes activation-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activation-spinner {
+    animation: none;
+  }
+}
+
+.activation-help {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid #f1f5f9;
+  width: 100%;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.activation-help p {
+  margin: 0 0 6px;
+}
+
+.activation-help p:last-child {
+  margin-bottom: 0;
+}
+
+.activation-install {
+  display: flex;
+  width: 100%;
+  margin-top: 8px;
+  gap: 8px;
+  background: white;
+  color: var(--primary-color);
+  border: 2px solid currentColor;
+  box-shadow: none;
+}
+
+.activation-support {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.activation-email {
+  font-weight: 700;
+  color: var(--primary-color);
+  user-select: text;
+}
+
+.activation-privacy {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* ─── Metronome ───────────────────── */
+.metronome-stage {
+  gap: var(--space-md);
+}
+
+.metronome-face {
+  /* The drawing is 200 x 220, so the width that fits is the height left over
+     below and above it, times 200/220. 400px is everything else on the stage. */
+  width: min(360px, 100%, max(160px, (100dvh - 400px) * 0.9));
+  aspect-ratio: 200 / 220;
+  padding: clamp(10px, 2.5vw, 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.metronome-face:active {
+  transform: scale(0.98);
+}
+
+.metronome-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.metronome-arm {
+  transform-box: view-box;
+  /* PIVOT_Y in MetronomeTool.jsx */
+  transform-origin: 100px 182px;
+  /* Eases the arm back upright when it stops. While it runs, every frame sets
+     the angle itself and a transition would only make it lag the beat. */
+  transition: transform 0.45s ease-out;
+}
+
+.metronome-face.is-playing .metronome-arm {
+  transition: none;
+}
+
+.metronome-weight {
+  transition: y 0.2s ease-out;
+}
+
+.metronome-light {
+  opacity: 0.2;
+}
+
+.metronome-tempo {
+  width: 100%;
+  max-width: 520px;
+  padding: 10px clamp(12px, 3vw, 22px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.metronome-bpm {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.metronome-bpm-value {
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.metronome-bpm-unit {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.metronome-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.metronome-step-btn {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #CCFBF1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+}
+
+.metronome-step-btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.metronome-step-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* A finger-sized slider: the native one is a thin line with a thumb smaller
+   than a fingertip. --fill is how far along it is, 0 to 1, set by the tool. */
+.metronome-slider {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.metronome-slider::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 7px;
+  /* The coloured part ends under the middle of the thumb, not at the track's
+     raw percentage, which would overshoot at the slow end and fall short at
+     the fast one by half a thumb. */
+  background: linear-gradient(
+    to right,
+    #14B8A6 calc(20px + (100% - 40px) * var(--fill, 0)),
+    #E2E8F0 calc(20px + (100% - 40px) * var(--fill, 0))
+  );
+}
+
+.metronome-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  margin-top: -13px;
+  border-radius: 50%;
+  background: white;
+  border: 5px solid #0F766E;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.metronome-slider::-moz-range-track {
+  height: 14px;
+  border-radius: 7px;
+  background: #E2E8F0;
+}
+
+.metronome-slider::-moz-range-progress {
+  height: 14px;
+  border-radius: 7px;
+  background: #14B8A6;
+}
+
+.metronome-slider::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: white;
+  border: 5px solid #0F766E;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.metronome-play-btn {
+  min-width: 180px;
+  flex-shrink: 0;
+}
+
+/* ─── Countdown, run counter, new-card pop ─────────── */
+/* Every new card in the flashcard tools pops in, so a card that comes up twice
+   in a row is still visibly a new one. A repeat gets an extra hop on top. */
+.card-pop {
+  animation: card-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-pop.is-repeat {
+  animation: card-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), card-hop 0.5s ease-in-out 0.45s;
+}
+
+@keyframes card-pop {
+  0% { opacity: 0.2; transform: scale(0.55); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes card-hop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-9%) scale(1.06); }
+  60% { transform: translateY(0) scale(0.97); }
+}
+
+.run-counter-badge {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 1rem;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  padding: 4px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.countdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.countdown-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(48vmin, 260px);
+  height: min(48vmin, 260px);
+  border-radius: 50%;
+  background: white;
+  border: 8px solid;
+  font-size: min(30vmin, 170px);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  animation: countdown-pop 0.9s ease-out;
+}
+
+/* Centre the digit's ink, not its line box. At line-height 1 a font's ascent
+   and descent decide where the glyph lands, and fonts disagree: Segoe UI on
+   Windows put the digit ~11px below the middle of the circle. Trimming to cap
+   height and baseline makes the box the digit itself, so flex centres that.
+   Browsers without text-box keep the old placement. */
+.countdown-digit {
+  display: block;
+  text-box: trim-both cap alphabetic;
+}
+
+@keyframes countdown-pop {
+  0% { opacity: 0; transform: scale(0.4); }
+  25% { opacity: 1; transform: scale(1.08); }
+  40% { transform: scale(1); }
+  100% { opacity: 1; transform: scale(0.96); }
+}
+
+.metronome-beat-count {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0F766E;
+  margin-left: 10px;
+}
+
+/* ─── Pierwsza głoska: the word with one letter hidden ── */
+.sound-word-slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.sound-word-slot {
+  min-width: 2.1em;
+  height: 2.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: clamp(1rem, 3vw, 1.35rem);
+  font-weight: 800;
+}
+
+.sound-word-slot.is-target {
+  background: white;
+  border-width: 3px;
+  border-style: dashed;
+  font-weight: 900;
+}
+
+/* ─── Kolorowe liczby ─────────────────────────────── */
+.number-hero-digit {
+  display: block;
+  font-size: clamp(6rem, 24vmin, 12rem);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 6px 0 rgba(0, 0, 0, 0.06);
+}
+
+.number-dots {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  justify-content: center;
+  gap: 6px 8px;
+  margin-top: 10px;
+}
+
+.number-dots.is-empty {
+  min-height: 18px;
+}
+
+.number-dot {
+  width: clamp(12px, 2.6vmin, 18px);
+  height: clamp(12px, 2.6vmin, 18px);
+  border-radius: 50%;
+}
+
+/* After five, a gap: 7 reads as five and two. */
+.number-dot:nth-child(10n + 6) {
+  grid-column: 1;
+}
+
+.number-quiz-card .number-dots {
+  gap: 10px 12px;
+  align-content: center;
+  min-height: calc(var(--dot-rows, 2) * clamp(18px, 4.5vmin, 30px) + (var(--dot-rows, 2) - 1) * 10px);
+}
+
+.number-quiz-card .number-dot {
+  width: clamp(18px, 4.5vmin, 30px);
+  height: clamp(18px, 4.5vmin, 30px);
+}
+
+.number-zero-hint {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.number-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.number-cell-digit {
+  font-size: clamp(2rem, 7vmin, 3.6rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.number-quiz-option {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1e293b;
+}
+
+.numbers-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.number-select-pill {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #475569;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.number-select-pill.selected {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-pop,
+  .card-pop.is-repeat,
+  .countdown-number {
+    animation: none;
+  }
+}
+
+/* ─── Letters in the games ────────────────────────── */
+/* Everything a child is asked to read or match as a letter uses the bundled
+   font (see --font-letters), not whatever the device has. */
+.letter-face,
+.find-target-letter,
+.pair-card-front:not(.is-picture),
+.scramble-letter-tile,
+.scramble-slot-char,
+.syllable-tile,
+.syllable-slot,
+.sound-letter-btn,
+.sound-prompt-letter,
+.sound-word-slot {
+  font-family: var(--font-letters);
+}
+
+/* Kolorowe liczby: the digit keeps the bright colour the child names, with a
+   darker edge of the same hue so a yellow 7 on cream is still readable. */
+.number-hero-digit,
+.number-cell-digit {
+  -webkit-text-stroke: 0.04em var(--digit-edge, transparent);
+  paint-order: stroke fill;
+}
+
+/* ─── Picture feedback on the canvas ──────────────── */
+/* Drawn over the child's ink: the right strokes replayed from their start, or
+   the target box. Never takes a touch. */
+.svg-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.letter-highlight {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: highlight-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes highlight-in {
+  from { opacity: 0; transform: scale(1.15); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* "Nothing drawn yet": the canvas edge glows three times instead of a box of
+   text. */
+.canvas-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: inset 0 0 0 6px #F59E0B, inset 0 0 28px rgba(245, 158, 11, 0.45);
+  opacity: 0;
+  animation: canvas-pulse 0.7s ease-in-out 3;
+}
+
+@keyframes canvas-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* Where to start: a filled dot on every stroke of a traced letter, numbered
+   when there is more than one. Called out (a few big pulses) when the child
+   draws nothing or starts in the wrong place. */
+.letter-start,
+.shape-start-dot.is-pulsing {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.letter-start.is-pulsing,
+.shape-start-dot.is-pulsing {
+  animation: start-dot-call 0.55s ease-in-out 4;
+}
+
+.shape-start-dot.is-pulsing {
+  opacity: 0.85;
+}
+
+@keyframes start-dot-call {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.6); }
+}
+
+/* ─── Feedback cards ─────────────────────────────── */
+.feedback-icon {
+  white-space: nowrap;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* A peeking card leaves the canvas in view: a light shade (still enough to
+   stop a new stroke starting under it) and a compact card at the top, over the
+   header rather than the drawing. */
+.feedback-modal.is-peek {
+  background: rgba(15, 23, 42, 0.12);
+  align-items: flex-start;
+  padding-top: max(10px, env(safe-area-inset-top));
+}
+
+.feedback-modal.is-peek .feedback-content {
+  max-width: 440px;
+  padding: 12px 22px 14px;
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22);
+  animation: peek-in 0.25s ease-out;
+}
+
+.feedback-modal.is-peek .feedback-content h2 {
+  font-size: clamp(1.4rem, 4.6vw, 2rem);
+  margin-bottom: 2px;
+}
+
+.feedback-modal.is-peek .feedback-content p {
+  font-size: 0.98rem;
+}
+
+@keyframes peek-in {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sticker-unlock-name {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #334155;
+}
+
+/* ─── Something went wrong ───────────────────────── */
+.error-fallback {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+}
+
+.error-fallback-picture {
+  font-size: clamp(4rem, 14vw, 6rem);
+  line-height: 1;
+}
+
+.error-fallback-text {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+/* ─── Header and menu details ────────────────────── */
+/* Holds the right-hand side of a header with no gear, the same width as the
+   back button, so the title stays centred. */
+.stage-header-spacer {
+  width: clamp(44px, 9vw, 50px);
+  flex-shrink: 0;
+}
+
+.menu-case-picker {
+  border-radius: 50px;
+  padding: 6px 10px;
+}
+
+/* Chosen by the child, so a full 44px target, not a settings chip. */
+.menu-case-picker .quick-chip-btn {
+  min-height: 44px;
+  padding: 8px 20px;
+  font-size: 1rem;
+}
+
+/* ─── Responsive overrides ──────────────────────────
+   These live at the end on purpose. CSS resolves ties by source order, so
+   an override placed above the rule it overrides silently loses - which is
+   exactly what happened to the picker and the sticker shelf. Keep new
+   breakpoint rules below every base rule, loosest breakpoint first. */
+
+@media (max-width: 600px) {
+  .shapes-selection-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tools-cards-grid {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* The scene buttons take the room the title had; the medal still says
+     where this is. */
+  .sticker-book-container .sticker-book-title .stage-title { display: none; }
+  /* What is left is the medal, so the pill shrinks to it rather than
+     standing empty across the header. */
+  .sticker-book-container .sticker-book-title { flex: 0 0 auto; min-width: 0; width: auto; padding: 6px 12px; margin-right: auto; }
+  .sticker-scene-btn { width: 44px; height: 44px; }
+  .sticker-scene-picker { gap: 5px; }
+  .sticker-tray { gap: 6px; padding: 6px 8px; }
+  .sticker-next { width: 54px; height: 54px; }
+  .sticker-next-picture { font-size: 28px; }
+
+  /* One row of controls on a phone. The ◀ ▶ pair and the buttons between them
+     wrapped onto two rows, and which button ended up on the second row changed
+     with the mode. Wyczyść and Podpowiedź keep their icon and lose the word. */
+  .controls,
+  .shapes-controls {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .controls .action-btn:not(.btn-secondary-round),
+  .shapes-controls .action-btn:not(.btn-secondary-round) {
+    padding: 12px 16px;
+  }
+
+  .btn-label-optional {
+    display: none;
+  }
+
+  .action-btn:has(> .btn-label-optional) > svg {
+    margin: 0 !important;
+  }
+
+  .stage-container .tool-header-title-badge {
+    margin: 0 6px;
+    padding: 6px 12px;
+  }
+
+  .scramble-slot {
+    width: clamp(44px, 11vw, 50px);
+    height: clamp(48px, 12vw, 56px);
+    border-radius: 10px;
+  }
+
+  .scramble-slot-char {
+    font-size: clamp(16px, 5vw, 24px);
+  }
+
+  .scramble-letter-tile {
+    width: clamp(46px, 12.5vw, 56px);
+    height: clamp(52px, 14vw, 64px);
+    border-radius: 10px;
+    font-size: clamp(16px, 5vw, 24px);
+  }
+}
+
+/* A phone held upright has height to spare under the picture, so the tray grows
+   to three rows. It still scrolls sideways, so dragging a sticker up out of it
+   onto the picture works the same as on a tablet. */
+@media (max-width: 480px) and (orientation: portrait) {
+  .sticker-tray { align-items: flex-start; }
+  .sticker-tray-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(3, 60px);
+    grid-auto-columns: 60px;
+  }
+}
+
+
+@media (max-height: 820px) {
+  .arrow-card-view {
+    gap: 14px;
+  }
+
+  .arrow-hero-card {
+    max-width: min(440px, 100dvh - 312px);
+    padding: 16px;
+  }
+
+  .arrow-grid-view {
+    gap: 12px;
+  }
+
+  /* Shrink the card's own contents rather than capping its width, so the
+     answer buttons stay on screen even with all eight directions enabled. */
+  .arrow-quiz-view {
+    gap: 10px;
+  }
+
+  .arrow-quiz-card {
+    max-width: 360px;
+    padding: 12px;
+  }
+
+  .arrow-svg-element.quiz-size {
+    width: clamp(52px, 12vh, 110px);
+    height: clamp(52px, 12vh, 110px);
+  }
+
+  .quiz-instruction {
+    font-size: 1rem;
+    margin-top: 8px;
+  }
+
+  .quiz-dir-btn {
+    padding: 8px 10px;
+  }
+
+  .quiz-btn-label {
+    font-size: 0.82rem;
+  }
+
+  .menu-screen-container {
+    padding-top: 56px;
+    padding-bottom: 16px;
+    gap: 12px;
+  }
+
+  .menu-grid {
+    /* The alphabet used to fill 60% of a tablet in 80px tiles; at 12vh it
+       takes the height there is. */
+    grid-template-columns: repeat(auto-fill, minmax(clamp(60px, 12vh, 124px), 1fr));
+    gap: clamp(8px, 1.4vh, 12px);
+  }
+
+  .letter-btn .letter-face {
+    font-size: clamp(1.4rem, 4.6vh, 2.4rem);
+  }
+
+  .letter-btn .icon {
+    font-size: clamp(0.85rem, 2vh, 1.15rem);
+    margin-top: 2px;
+  }
+}
+
+@media (max-height: 820px) {
+  .scramble-play-card {
+    gap: clamp(6px, 1.2vh, 13px);
+    padding: clamp(12px, 2vh, 18px) clamp(16px, 3vw, 36px);
+    margin: 4px auto;
+  }
+
+  /* Everything else on the card scales with the height here too, which is
+     why the subtraction is a slope and not a constant. */
+  .scramble-illustration-circle {
+    --pic: clamp(max(68px, 13.5vh), 78.5vh - 437px, 200px);
+  }
+
+  .syllables-stage .scramble-illustration-circle {
+    --pic: clamp(max(68px, 13.5vh), 100dvh - 676px, 200px);
+  }
+
+  .scramble-emoji-display {
+    font-size: clamp(36px, 7.6vh, 66px);
+  }
+
+  .scramble-slot {
+    width: clamp(44px, 6vh, 50px);
+    height: clamp(48px, 7vh, 56px);
+  }
+
+  .scramble-letter-tile {
+    width: clamp(44px, 7.5vh, 56px);
+    height: clamp(50px, 8.5vh, 64px);
+  }
+}
+
+@media (max-height: 820px) {
+  .tools-menu-container {
+    /* Clears the fixed nav buttons, which end at 68px. */
+    padding-top: 72px;
+    padding-bottom: 18px;
+    gap: 13px;
+  }
+
+  .tools-main-title {
+    font-size: clamp(1.35rem, 3vw, 1.85rem);
+  }
+
+  .tools-section {
+    gap: 8px;
+  }
+
+  .tools-section-title {
+    font-size: clamp(0.88rem, 2.1vw, 1.02rem);
+  }
+
+  .tool-card {
+    padding: 13px 10px;
+    gap: 2px;
+  }
+
+  .tool-card-icon {
+    font-size: clamp(1.8rem, 4.4vh, 2.5rem);
+  }
+}
+
+@media (max-height: 820px) {
+  .find-target { padding: 6px 16px; }
+  .find-tile-letter { font-size: clamp(1.3rem, 52cqi, 5rem); }
+  .sound-prompt { gap: 6px; padding: 12px; }
+  .sound-prompt-picture { --pic: clamp(84px, 100dvh - 475px, 240px); }
+  /* With the word's letters shown under it the picture gives up the room. */
+  .sound-prompt:has(.sound-word-slots) .sound-prompt-picture { --pic: clamp(60px, 100dvh - 520px, 220px); }
+  .sound-options:has(> .sound-picture-btn) { --pic: clamp(88px, (100dvh - 475px) / 2, 170px); }
+  .sound-word-slot { height: 1.8em; min-width: 1.7em; }
+}
+
+/* Below this height two rows of picture answers would be smaller than one row
+   of four, so they go four across. 118px is what four fit in at the row's
+   520px. A narrow screen this short keeps two rows. */
+@media (max-height: 710px) and (min-width: 560px) {
+  .sound-options:has(> .sound-picture-btn) {
+    --pic: clamp(70px, 100dvh - 465px, 118px);
+    max-width: 520px;
+  }
+}
+
+@media (max-height: 680px) {
+  .tools-menu-container {
+    padding-top: 62px;
+    gap: 9px;
+  }
+
+  .tools-main-title {
+    font-size: clamp(1rem, 2.4vw, 1.2rem);
+  }
+
+  .tools-section {
+    gap: 5px;
+  }
+
+  .tool-card {
+    padding: 8px 8px;
+  }
+
+  .tool-card-icon {
+    font-size: clamp(1.4rem, 3.4vh, 1.9rem);
+  }
+
+  /* Słowa and Pierwsza głoska ran 15px past the bottom of a 1024x600 tablet;
+     the 44px letter tiles added a few more. Tighter card spacing pays for it
+     rather than a smaller picture, which already sits at its floor here. */
+  .scramble-play-card {
+    gap: 8px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .scramble-hint-text {
+    padding: 4px 12px;
+  }
+
+  .stage-container:has(> .scramble-play-card) {
+    padding-bottom: 8px;
+  }
+
+  .sound-prompt-picture {
+    --pic: clamp(84px, 100dvh - 495px, 240px);
+  }
+
+  /* Syllable cards carry a picture, slots and a tile pool, and unlike the word
+     scramble they also have mode tabs. Scoped to this tool so the shared
+     .stage-container spacing the canvas tools measure against stays put. */
+  .syllable-slot,
+  .syllable-tile {
+    height: clamp(44px, 8vh, 56px);
+    min-width: clamp(48px, 10vh, 72px);
+    font-size: clamp(0.9rem, 2.6vh, 1.25rem);
+  }
+
+  .syllables-stage {
+    row-gap: 6px;
+    padding-bottom: 8px;
+  }
+
+  .syllables-stage .scramble-play-card {
+    gap: 5px;
+  }
+
+  .syllables-stage .scramble-illustration-circle {
+    --pic: clamp(max(52px, 10vh), 100dvh - 565px, 160px);
+  }
+
+  .syllables-stage .scramble-emoji-display {
+    font-size: clamp(28px, 6vh, 44px);
+  }
+
+  .count-option-btn {
+    width: clamp(54px, 11vh, 74px);
+    height: clamp(54px, 11vh, 74px);
+    font-size: clamp(1.4rem, 4.5vh, 2rem);
+  }
+}
+
+/* Short screens: the szlaczki stage carries a row more than the other canvas
+   tools (the family's patterns), so it trims its own chrome rather than
+   letting the canvas collapse. Values re-measured in the browser at 1024x600.
+   Loosest breakpoint first, like every rule above. */
+@media (max-height: 820px) {
+  .stage-container.patterns-stage {
+    --stage-chrome: 395px;
+    padding-top: 58px;
+    padding-bottom: 14px;
+    gap: 8px;
+  }
+
+  .patterns-stage .shapes-tab-btn {
+    min-height: 38px;
+    padding: 5px 14px;
+  }
+
+  .patterns-stage .pattern-chip {
+    min-height: 38px;
+    padding: 4px 9px;
+    font-size: 0.72rem;
+  }
+
+  .family-card {
+    padding: 10px 14px 8px;
+    gap: 2px;
+  }
+
+  .family-card-emoji {
+    font-size: clamp(1.8rem, 5.5vh, 2.6rem);
+  }
+}
+
+@media (max-height: 680px) {
+  .stage-container.patterns-stage {
+    --stage-chrome: 388px;
+  }
+
+  .patterns-stage .stage-header {
+    margin-bottom: 0;
+  }
+}
+
+/* Activation screen on a short tablet held in landscape: the card is the only
+   thing on the page, so it gives up its breathing room before it scrolls. */
+@media (max-height: 680px) {
+  .activation-screen {
+    padding: var(--space-md);
+    align-items: flex-start;
+  }
+
+  .activation-card {
+    padding: var(--space-md) clamp(18px, 4vw, 28px);
+  }
+
+  .activation-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .activation-lead {
+    margin-bottom: var(--space-sm);
+  }
+
+  .activation-help {
+    margin-top: var(--space-sm);
+  }
+}
+
+/* Metronome on short screens. The drawing takes its width from the height the
+   rest of the stage leaves over (see .metronome-face), so every pixel trimmed
+   from the rows around it goes to the drawing. Measured in the browser at
+   1280x800 and 1024x600. Loosest breakpoint first. */
+@media (max-height: 820px) {
+  .metronome-face {
+    width: min(360px, 100%, max(160px, (100dvh - 410px) * 0.9));
+  }
+}
+
+@media (max-height: 680px) {
+  .stage-container.metronome-stage {
+    padding-top: 58px;
+    padding-bottom: 12px;
+    gap: 10px;
+  }
+
+  .metronome-stage .stage-header {
+    margin-bottom: 0;
+  }
+
+  .metronome-face {
+    width: min(360px, 100%, max(150px, (100dvh - 310px) * 0.9));
+  }
+
+  .metronome-tempo {
+    padding: 4px 16px;
+  }
+
+  .metronome-bpm-value {
+    font-size: 1.6rem;
+  }
+
+  .metronome-step-btn {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Logo on short screens - the home grid is measured to fit, so the logo gives way. */
+@media (max-height: 820px) {
+  .app-logo {
+    width: clamp(150px, 24vw, 220px);
+  }
+}
+
+@media (max-height: 680px) {
+  .app-logo {
+    width: clamp(110px, 16vw, 150px);
+  }
+}
+
+/* Home screen. Five across wherever five fit, so the five Ćwicz rękę cards
+   share a row instead of leaving Metronom alone on one, and the pictures are
+   bigger than the names under them - pictures before words. */
+@media (min-width: 760px) {
+  .tools-cards-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.tool-card-icon {
+  font-size: clamp(2.4rem, 6vw, 3.2rem);
+}
+
+@media (max-height: 820px) {
+  .tool-card-icon {
+    font-size: clamp(2.2rem, 5.6vh, 2.9rem);
+  }
+}
+
+/* A 1024x600 tablet showed two of the four bands. The heading and the card
+   subtitles are words for the adult; here they give their rows to the cards,
+   so all twelve fit. The heading stays for screen readers. */
+@media (max-height: 680px) {
+  .tools-main-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tool-card-subtitle {
+    display: none;
+  }
+
+  .tool-card-icon {
+    font-size: clamp(1.9rem, 5.4vh, 2.3rem);
+  }
+
+  /* One line, so "Pierwsza głoska" does not make its row taller than the rest. */
+  .tool-card-title {
+    font-size: clamp(0.82rem, 1.6vw, 1rem);
+    white-space: nowrap;
+  }
+}
+
+/* Phone held upright: the header stays at the top and what is under it is
+   centred in the height that is left, instead of leaving 200-300px empty
+   below the buttons. Two auto margins share the free space. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .app-container > .stage-container > .stage-header {
+    margin-bottom: auto;
+  }
+
+  .app-container > .stage-container::after {
+    content: '';
+    margin-top: auto;
+  }
+}
+
+/* Tablets on their side. Stacked in a 680px column the canvas came out 450px
+   on a 1280x800 tablet, with empty margins either side, because the header,
+   tabs and buttons above and below it all come off the height. Here, as on a
+   phone held sideways, the canvas takes the left at the full height of the
+   screen and everything else goes in a column beside it. Słowa and Sylaby put
+   the picture beside the word, so it can be large. */
+@media (orientation: landscape) and (min-width: 1000px) and (min-height: 560px) {
+  .app-container > .stage-container:has(> .canvas-wrapper) {
+    --pad-y: 24px;
+    --pad-x: 32px;
+    --side-min: 300px;
+    display: grid;
+    grid-template-columns: auto minmax(var(--side-min), 400px);
+    grid-template-rows: 1fr repeat(8, auto) 1fr;
+    justify-content: center;
+    align-items: center;
+    column-gap: 32px;
+    row-gap: 0;
+    max-width: none;
+    flex: none;
+    height: 100dvh;
+    padding: var(--pad-y) var(--pad-x);
+  }
+
+  .stage-container:has(> .canvas-wrapper)::before {
+    content: '';
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .stage-container:has(> .canvas-wrapper)
+    > :not(.canvas-wrapper, .feedback-modal, .shapes-settings-modal-overlay, .countdown-overlay) {
+    grid-column: 2;
+    justify-self: center;
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+
+  .stage-container > .canvas-wrapper {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    width: min(100dvh - 2 * var(--pad-y), 100vw - 2 * var(--pad-x) - var(--side-min) - 32px);
+    max-width: none;
+  }
+
+  .stage-container > .pattern-canvas-wrapper {
+    width: min(
+      (100dvh - 2 * var(--pad-y)) * var(--pattern-aspect, 1),
+      100vw - 2 * var(--pad-x) - var(--side-min) - 32px
+    );
+  }
+
+  .stage-container:has(> .canvas-wrapper) .controls,
+  .stage-container:has(> .canvas-wrapper) .shapes-controls {
+    flex-wrap: nowrap;
+  }
+
+  .app-container > .stage-container:has(> .scramble-play-card) {
+    max-width: 960px;
+  }
+
+  .stage-container > .scramble-play-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: center;
+    gap: 14px 32px;
+    max-width: 920px;
+  }
+
+  .scramble-play-card > .scramble-image-wrapper {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+  }
+
+  .scramble-play-card > :not(.scramble-image-wrapper) {
+    grid-column: 2;
+  }
+
+  .scramble-illustration-circle {
+    --pic: clamp(180px, min(30vw, 100dvh - 330px), 360px);
+  }
+
+  /* Strzałki quiz: the answers sit round the child in a 3x3 grid, three rows
+     deep, so on a screen this wide they go beside the arrow, not under it. */
+  .arrow-quiz-view {
+    display: grid;
+    grid-template-columns: auto minmax(0, 420px);
+    justify-content: center;
+    align-items: center;
+    gap: 10px 32px;
+  }
+
+  .arrow-quiz-view > :not(.quiz-options-grid) {
+    grid-column: 1;
+  }
+
+  .arrow-quiz-view > .quiz-options-grid {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+
+  /* Sylaby has a row of tabs more above the card. */
+  .syllables-stage .scramble-illustration-circle {
+    --pic: clamp(160px, min(30vw, 100dvh - 390px), 340px);
+  }
+}
+
+/* Classroom boards and big monitors. Every cap above was set for a tablet, so
+   on a 1920x1080 board the canvas stopped at 540px - half the height, in a
+   narrow column - though the height formula alone allows ~770px. Here only the
+   caps are lifted: the canvas still yields to --stage-chrome, so the action
+   buttons stay on screen, and only screens with a canvas get the wider column.
+   A 4K board at 100% Windows scaling is better served by zooming the app
+   (Ctrl and +), which scales every control too, not just the canvas. */
+@media (min-width: 1200px) and (min-height: 900px) {
+  .stage-container:has(> .canvas-wrapper) {
+    max-width: 1200px;
+  }
+
+  .canvas-wrapper {
+    max-width: min(1000px, 100dvh - var(--stage-chrome, 250px), 92vw);
+  }
+
+  .pattern-canvas-wrapper {
+    max-width: min(
+      1400px,
+      92vw,
+      calc((100dvh - var(--stage-chrome, 250px)) * var(--pattern-aspect, 1))
+    );
+  }
+}
+
+/* Phone held sideways. Every stacked screen was laid out for height a phone on
+   its side does not have - at 844x390 the drawing canvas came out 78px tall -
+   so below 540px of landscape height the activity screens change shape. Must
+   stay last: it is the tightest breakpoint in the file. Tablets in landscape
+   are taller than this and keep the layout above.
+
+   Shared by every activity screen: the stars and mute pair moves from the top
+   right corner down the left-hand strip, so the top of the screen
+   is free and a stage starts 10px from the top instead of 54px below it. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .app-container > .stage-container {
+    --pad-y: 10px;
+    --pad-x: clamp(64px, 9vw, 76px);
+    max-width: calc(680px + 2 * var(--pad-x));
+    padding: var(--pad-y) var(--pad-x);
+    gap: 8px;
+  }
+
+  .app-container:has(> .stage-container) .global-nav-right {
+    top: auto;
+    right: auto;
+    bottom: clamp(10px, 2.5vw, 18px);
+    left: clamp(10px, 2.5vw, 18px);
+    flex-direction: column;
+  }
+
+  .app-container:has(> .stage-container) .star-counter-btn {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    width: clamp(44px, 9vw, 50px);
+    height: auto;
+    min-height: 54px;
+    padding: 4px 0;
+    border-radius: 24px;
+  }
+
+  .app-container:has(> .stage-container) .star-counter-icon {
+    margin-left: 0;
+  }
+
+  .stage-container .stage-header {
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  /* The title is sized off the viewport width, which is large sideways. */
+  .stage-container .tool-header-title-badge {
+    min-width: 0;
+    padding: 4px 12px;
+  }
+
+  .stage-container .stage-title {
+    font-size: 1.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stage-container .shape-icon-badge {
+    font-size: 1.1rem;
+  }
+
+  .stage-container .back-btn,
+  .stage-container .settings-toggle-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .stage-container .shapes-tab-btn {
+    min-height: 44px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .stage-container .action-btn:not(.btn-secondary-round) {
+    padding: 10px 14px;
+    font-size: 0.92rem;
+  }
+
+  .stage-container .btn-secondary-round {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  /* Screens built around one big thing - the drawing canvas, or a game's play
+     card - put it on the left at the full height of the screen and everything
+     else in a column beside it. Pure CSS on the existing markup: the hero spans
+     every row, the ::before takes the first row, and the 1fr rows either side
+     of the side items centre them vertically. Row gaps are margins because a
+     grid gap is added between empty tracks too. */
+  .app-container > .stage-container:has(> :is(.canvas-wrapper, .sound-prompt, .scramble-play-card, .metronome-face, .sticker-scene, .find-grid, .pairs-grid)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+    grid-template-rows: 1fr repeat(8, auto) 1fr;
+    justify-content: center;
+    align-items: center;
+    column-gap: clamp(12px, 2vw, 24px);
+    row-gap: 0;
+    max-width: none;
+    /* A definite height, not flex: 1. Sized from its content, the grid gives
+       every 1fr row the same height as the tallest and runs off the screen. */
+    flex: none;
+    height: 100dvh;
+    padding-right: 16px;
+  }
+
+  .stage-container:has(> :is(.canvas-wrapper, .sound-prompt, .scramble-play-card, .metronome-face, .sticker-scene, .find-grid, .pairs-grid))::before {
+    content: '';
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* Overlays are left out: a fixed box that takes justify-self: center is
+     shrunk to fit and centred, so a feedback card, settings panel or
+     countdown covered a strip in the middle of the screen instead of all of
+     it. The sticker being dragged is fixed under the finger too. */
+  .stage-container:has(> :is(.canvas-wrapper, .sound-prompt, .scramble-play-card, .metronome-face, .sticker-scene, .find-grid, .pairs-grid))
+    > :not(.canvas-wrapper, .sound-prompt, .scramble-play-card, .metronome-face, .sticker-scene, .find-grid, .pairs-grid, .feedback-modal, .shapes-settings-modal-overlay, .countdown-overlay, .sticker-ghost) {
+    grid-column: 2;
+    justify-self: center;
+    margin-top: 0;
+    margin-bottom: 6px;
+  }
+
+  .stage-container > :is(.sound-prompt, .scramble-play-card, .metronome-face, .sticker-scene, .find-grid, .pairs-grid) {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    justify-self: center;
+    margin: 0;
+  }
+
+  /* The canvas is square and sized off the height, so its column is too. */
+  .app-container > .stage-container:has(> .canvas-wrapper) {
+    --side-min: 280px;
+    grid-template-columns: auto minmax(var(--side-min), 380px);
+  }
+
+  .stage-container > .canvas-wrapper {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    width: min(
+      100dvh - 2 * var(--pad-y),
+      100vw - var(--pad-x) - 16px - var(--side-min) - 24px
+    );
+    max-width: none;
+    border-radius: 24px;
+  }
+
+  .stage-container > .canvas-wrapper .canvas-element {
+    border-radius: 24px;
+  }
+
+  .stage-container > .pattern-canvas-wrapper {
+    width: min(
+      (100dvh - 2 * var(--pad-y)) * var(--pattern-aspect, 1),
+      100vw - var(--pad-x) - 16px - var(--side-min) - 24px
+    );
+  }
+
+  /* Words for a reader: the swatches, the chip pictures and the canvas say the
+     same thing, and the column is short enough that every row counts. */
+  .stage-container:has(> .canvas-wrapper) > .shape-tracker-pill,
+  .stage-container:has(> .canvas-wrapper) .pattern-chip-name {
+    display: none;
+  }
+
+  .stage-container:has(> .canvas-wrapper) .pattern-chip {
+    min-height: 40px;
+    padding: 4px 10px;
+  }
+
+  .stage-container:has(> .canvas-wrapper) .controls,
+  .stage-container:has(> .canvas-wrapper) .shapes-controls,
+  .stage-container:has(> .canvas-wrapper) .controls > div {
+    gap: 6px !important;
+  }
+
+  .stage-container:has(> .canvas-wrapper) .action-btn:not(.btn-secondary-round) {
+    padding: 10px 12px;
+  }
+
+  /* Strzałki: the card is sized off the height left under the header and tabs,
+     with its two buttons stacked beside it rather than below. */
+  .arrow-card-view {
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .arrow-hero-card {
+    width: calc(100dvh - 2 * var(--pad-y) - 118px);
+    max-width: none;
+    padding: 12px;
+    flex-shrink: 0;
+  }
+
+  .arrow-graphic-wrapper {
+    width: 58%;
+    height: 58%;
+  }
+
+  .arrow-labels-container {
+    margin-top: 4px;
+  }
+
+  .arrow-controls-row {
+    flex-direction: column;
+  }
+
+  /* The quiz answers go beside the arrow instead of under it. */
+  .arrow-quiz-view {
+    display: grid;
+    grid-template-columns: auto minmax(0, 340px);
+    justify-content: center;
+    align-items: center;
+    gap: 10px 20px;
+  }
+
+  .arrow-quiz-view > :not(.quiz-options-grid) {
+    grid-column: 1;
+  }
+
+  .arrow-quiz-view > .quiz-options-grid {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .quiz-compass {
+    grid-template-rows: repeat(3, minmax(48px, auto));
+    gap: 6px;
+  }
+
+  .quiz-compass .quiz-dir-btn {
+    min-height: 48px;
+  }
+
+  /* Znajdź literę and Pary liter: the board is the hero and has the whole
+     height, so only the padding is taken off it. Stacked under the header,
+     tabs and buttons its tiles came out about 50px across. */
+  .stage-container > :is(.find-grid, .pairs-grid) {
+    --grid-chrome: calc(2 * var(--pad-y));
+    width: 100%;
+  }
+
+  /* Metronom: the drawing is the hero; 200 x 220, so its width is the screen
+     height times 200/220. */
+  .stage-container > .metronome-face {
+    width: min(360px, (100dvh - 2 * var(--pad-y)) * 0.9);
+  }
+
+  /* The controls sit in a narrow column beside the canvas: keep them on one
+     row, the same way as on a phone held upright. */
+  .stage-container .controls,
+  .stage-container .shapes-controls {
+    flex-wrap: nowrap;
+  }
+
+  .stage-container .btn-label-optional {
+    display: none;
+  }
+
+  .stage-container .action-btn:has(> .btn-label-optional) > svg {
+    margin: 0 !important;
+  }
+
+  /* Słowa and Sylaby: the card is the hero, and stacked it ran to five rows in
+     a screen 360px tall - the picture came out 68px across and a long word ran
+     off both ends. So the picture takes the left of the card at close to full
+     height and the letters go beside it. The clue is a sentence for the adult
+     and gives up its rows, like the tracker pill beside a canvas. If the
+     longest word still does not fit the smallest phone, the card scrolls
+     rather than losing its top. */
+  .app-container > .stage-container:has(> .scramble-play-card) {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  }
+
+  .stage-container > .scramble-play-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: safe center;
+    align-items: center;
+    justify-items: center;
+    gap: 6px 12px;
+    width: 100%;
+    max-height: 100%;
+    padding: 10px 14px;
+    overflow-y: auto;
+  }
+
+  .scramble-play-card > .scramble-image-wrapper {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+  }
+
+  .scramble-play-card > :not(.scramble-image-wrapper) {
+    grid-column: 2;
+  }
+
+  .scramble-play-card > .scramble-hint-text {
+    display: none;
+  }
+
+  .scramble-illustration-circle,
+  .syllables-stage .scramble-illustration-circle {
+    --pic: clamp(84px, min(100dvh - 2 * var(--pad-y) - 40px, 16vw), 150px);
+  }
+
+  .scramble-slots-row {
+    --slot-gap: 5px;
+    --slot-min: 28px;
+    min-height: 0;
+  }
+
+  .scramble-tiles-grid {
+    gap: 6px;
+  }
+
+  .scramble-slot-char {
+    font-size: 18px;
+  }
+
+  .scramble-message-row {
+    min-height: 30px;
+  }
+
+  /* Pierwsza głoska: the prompt card has the whole height to itself. */
+  .sound-prompt-picture {
+    --pic: clamp(84px, 100dvh - 150px, 240px);
+  }
+
+  .sound-prompt:has(.sound-word-slots) .sound-prompt-picture {
+    --pic: clamp(60px, 100dvh - 200px, 200px);
+  }
+
+  /* Moje naklejki: the picture is the hero, 4:3 and sized off the height; the
+     header and the tray share the column beside it, and the tray wraps and
+     scrolls downwards instead of sideways. */
+  .app-container > .stage-container:has(> .sticker-scene) {
+    grid-template-columns: auto minmax(250px, 320px);
+  }
+
+  .stage-container > .sticker-scene {
+    width: min(
+      (100dvh - 2 * var(--pad-y)) * 4 / 3,
+      100vw - var(--pad-x) - 16px - 250px - 24px
+    );
+    border-radius: 22px;
+    border-width: 4px;
+  }
+
+  .sticker-book-container .sticker-book-title .stage-title { display: none; }
+  /* What is left is the medal, so the pill shrinks to it rather than
+     standing empty across the header. */
+  .sticker-book-container .sticker-book-title { flex: 0 0 auto; min-width: 0; width: auto; padding: 6px 12px; margin-right: auto; }
+  .sticker-scene-btn { width: 44px; height: 44px; }
+
+  .stage-container > .sticker-tray {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-height: calc(100dvh - 2 * var(--pad-y) - 70px);
+    padding: 8px;
+  }
+
+  .sticker-next {
+    align-self: center;
+    width: 52px;
+    height: 52px;
+  }
+
+  .sticker-next-picture { font-size: 28px; }
+
+  .sticker-tray-list {
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    touch-action: pan-y;
+    scroll-snap-type: none;
+  }
+
+  .sticker-tray-item {
+    width: 52px;
+    height: 52px;
+    touch-action: pan-y;
+  }
+
+  .sticker-tray-picture { font-size: 34px; }
+
+  /* The tray is to the right of the picture, so the hint points there. */
+  .sticker-scene-hint {
+    left: auto;
+    right: 70px;
+    bottom: 50%;
+    animation-name: sticker-hint-side;
+  }
+
+  @keyframes sticker-hint-side {
+    0%, 100% { transform: translate(0, 50%) rotate(-90deg); }
+    50% { transform: translate(10px, 50%) rotate(-90deg); }
+  }
+}
+
+/* A phone on its side has the canvas down the left at full height, so a
+   peeking card sits in the right-hand column instead of over the top. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .feedback-modal.is-peek {
+    align-items: center;
+    justify-content: flex-end;
+    padding: 12px max(16px, env(safe-area-inset-right)) 12px 12px;
+  }
+
+  .feedback-modal.is-peek .feedback-content {
+    max-width: min(360px, 44vw);
+  }
+
+  /* The tabs grew to 44px here; thinner padding round them keeps Strzałki
+     and Liczby from running 2px past the bottom. */
+  .stage-container .shapes-mode-tabs {
+    padding: 3px;
+  }
+
+  .pair-card {
+    min-width: 44px;
+  }
+
+  /* Icon-only buttons stay round 44px targets. */
+  .stage-container .btn-clear,
+  .stage-container .btn-hint {
+    min-width: 44px;
+  }
+}

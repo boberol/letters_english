@@ -1,0 +1,38 @@
+name = "nauka-liter-licence"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# The account that owns the Worker and the D1 database below. Not a secret - it
+# is in every dashboard URL - and naming it here is what stops a deploy from
+# going to the wrong place when more than one Cloudflare account has been logged
+# into on a machine. Without it wrangler picks an account on its own, and the
+# first sign of trouble is "D1 binding 'DB' references database ... not found",
+# which reads like the id is wrong when the account is.
+account_id = "c1c9057bd6e8acec7a133c6055936b91"
+
+# Fill in database_id after `npx wrangler d1 create nauka-liter-licences` -
+# the command prints it.
+[[d1_databases]]
+binding = "DB"
+database_name = "nauka-liter-licences"
+database_id = "c9788518-bb9b-4690-a5a1-7558fdeb3804"
+
+[triggers]
+# Sweeps expired throttle rows. Nothing else here needs a schedule; the licence
+# data is meant to be kept.
+crons = ["17 3 * * *"]
+
+[vars]
+# The app's origin, e.g. "https://nauka-liter.pl". Several, separated by commas,
+# are allowed so that a move between domains does not have to be instant: both
+# addresses keep activating while tablets catch up. Left as "*" any web page can
+# call the endpoint - a quota guard, not a security control, since a client that
+# is not a browser ignores CORS either way.
+#
+# An address that is reachable two ways (with and without www) counts as two
+# origins and needs both listed, or a redirect to one of them.
+ALLOWED_ORIGIN = "https://literki.acentrum.pl,https://naukaliterek.pages.dev"
+
+# Secrets are NOT set here - `wrangler secret put` keeps them out of the repo:
+#   npx wrangler secret put LICENSE_PRIVATE_KEY   (base64 PKCS#8, from ../license_keys.mjs)
+#   npx wrangler secret put ADMIN_TOKEN           (any long random string)

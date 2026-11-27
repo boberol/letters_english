@@ -1,0 +1,10 @@
+const fs=require('fs'); 
+const reverse=require('svg-path-reverse'); 
+const {JSDOM}=require('jsdom'); 
+const dom=new JSDOM(fs.readFileSync('src/assets/letters/y.svg', 'utf8')); 
+const paths=dom.window.document.querySelectorAll('path'); 
+const lastPath=paths[paths.length-1]; 
+lastPath.setAttribute('d', reverse.reverse(lastPath.getAttribute('d'))); 
+let newContent=new dom.window.XMLSerializer().serializeToString(dom.window.document).replace(/<html[^>]*><head><\/head><body>/, '').replace(/<\/body><\/html>/, ''); 
+fs.writeFileSync('src/assets/letters/y.svg', newContent); 
+console.log('Fixed y.svg');
