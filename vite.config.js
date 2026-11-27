@@ -1,81 +1,7 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { VitePWA } from 'vite-plugin-pwa'
-import process from 'node:process'
-import { Buffer } from 'node:buffer'
-import { webcrypto } from 'node:crypto'
-
-// A customer build with no usable licence configuration still builds, still
-// precaches, installs fine - and then shows every family "Aplikacja nie jest
-// skonfigurowana" and accepts no code. The app fails closed at runtime on
-// purpose (see src/utils/license.js), but a customer's tablet is the wrong place
-// to find out. So `vite build` checks the two values it is about to bake in and
-// refuses to produce something that cannot be activated.
-//
-// ALLOW_TEST_BUILD=1 turns the refusal into a warning, for a build that is not
-// for customers: exercising the service worker locally, or pointing at a
-// `wrangler dev` Worker. It is not VITE_-prefixed, so it never reaches the bundle.
-const checkLicenceConfig = async (mode) => {
-  // loadEnv also picks up VITE_* variables from the process environment, and
-  // those win over .env - the same precedence the build itself uses.
-  const env = loadEnv(mode, process.cwd(), 'VITE_')
-  const problems = []
-
-  const url = env.VITE_ACTIVATION_URL || ''
-  let parsed = null
-  if (!url) {
-    problems.push('VITE_ACTIVATION_URL is not set.')
-  } else {
-    try {
-      parsed = new URL(url)
-    } catch {
-      problems.push(`VITE_ACTIVATION_URL is not a URL: ${url}`)
-    }
-  }
-  if (parsed && /your-subdomain/i.test(parsed.hostname)) {
-    problems.push('VITE_ACTIVATION_URL is still the placeholder from .env.example.')
-  } else if (parsed && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(parsed.hostname)) {
-    problems.push(`VITE_ACTIVATION_URL points at this machine (${parsed.host}) - a local test value.`)
-  } else if (parsed && parsed.protocol !== 'https:') {
-    // An installed app is served over https, and a browser blocks an https page
-    // from calling plain http: every activation would fail as "offline".
-    problems.push(`VITE_ACTIVATION_URL must be https, not ${parsed.protocol}`)
-  }
-
-  const key = env.VITE_LICENSE_PUBLIC_KEY || ''
-  if (!key) {
-    problems.push('VITE_LICENSE_PUBLIC_KEY is not set.')
-  } else {
-    // The same import the app does on every launch. A key that fails here fails
-    // there too, and then no token - including a freshly issued one - verifies.
-    try {
-      await webcrypto.subtle.importKey(
-        'spki',
-        Buffer.from(key, 'base64'),
-        { name: 'ECDSA', namedCurve: 'P-256' },
-        false,
-        ['verify']
-      )
-    } catch {
-      problems.push(
-        'VITE_LICENSE_PUBLIC_KEY is not a P-256 public key - paste the whole line printed by `node license_keys.mjs`.'
-      )
-    }
-  }
-
-  if (!problems.length) return
-
-  const details = problems.map((p) => `  - ${p}`).join('\n')
-  if (process.env.ALLOW_TEST_BUILD === '1') {
-    console.warn(`\nALLOW_TEST_BUILD=1: building anyway. This build is NOT for customers:\n${details}\n`)
-    return
-  }
-  throw new Error(
-    `\nRefusing to build: the licence configuration would ship an app no code can activate.\n${details}\n\n` +
-      'Fix .env (see .env.example). For a local build that is not for customers, set ALLOW_TEST_BUILD=1.\n'
-  )
-}
 
 const config = {
   plugins: [
@@ -140,7 +66,4 @@ const config = {
 }
 
 // https://vite.dev/config/
-export default defineConfig(async ({ command, mode }) => {
-  if (command === 'build') await checkLicenceConfig(mode)
-  return config
-})
+export default defineConfig(config)

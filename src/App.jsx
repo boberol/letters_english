@@ -3,11 +3,9 @@ import ToolsMenu from './components/ToolsMenu';
 import StickerUnlock from './components/StickerUnlock';
 import { stickerProgress, RING_LENGTH } from './data/stickers';
 import { Volume2, VolumeX, Maximize, Minimize, Download } from 'lucide-react';
-import ActivationScreen from './components/ActivationScreen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { sounds } from './utils/audio';
 import { useProgress } from './hooks/useProgress';
-import { useLicense } from './hooks/useLicense';
 import { useInstall } from './hooks/useInstall';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { install } from './utils/install';
@@ -91,7 +89,6 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(() => sounds.getMuted());
   const { totalStars } = useProgress();
   const stickerFraction = stickerProgress(totalStars).fraction;
-  const { status: licenseStatus } = useLicense();
   const { canInstall, fullscreenAvailable, fullscreen } = useInstall();
   // A classroom board or a computer with a mouse, not a tablet: on a tablet the
   // fullscreen button would only be one more thing for a child to tap by mistake.
@@ -200,19 +197,6 @@ export default function App() {
   };
 
   const Tool = VIEW_REGISTRY[view];
-
-  // The licence gate. It sits below every hook and above every screen, so the
-  // rules of hooks are kept and nothing behind it - not the tool grid, not the
-  // history listener above - renders until the token verifies.
-  //
-  // Verifying a signature is a promise, so there is one frame where the answer
-  // is not known yet. That frame renders nothing rather than a splash: it lasts
-  // a couple of milliseconds, and a message that flashes past is worse than no
-  // message. The page keeps its own background either way.
-  if (licenseStatus === 'checking') return null;
-  if (licenseStatus !== 'unlocked') {
-    return <ActivationScreen unconfigured={licenseStatus === 'unconfigured'} />;
-  }
 
   return (
     <div className="app-container">
