@@ -13,7 +13,7 @@ import { useRound } from '../hooks/useRound';
 import { loadChoice, saveChoice } from '../utils/storage';
 
 // Difficulty is the length of the words in the pool plus how many decoy
-// syllables get mixed in. Two-syllable open words are where a Polish child
+// syllables get mixed in. Two-syllable words are where a child
 // starts, so that is the easy setting rather than a shorter time limit.
 const LEVELS = {
   two: { id: 'two', label: '🟢 Two syllables', maxSyllables: 2, extras: 0 },

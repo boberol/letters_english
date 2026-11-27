@@ -7,10 +7,10 @@ import { wordsData } from './wordsData';
 
 export const syllablesData = wordsData.filter((word) => word.syllables.length >= 2);
 
-// An open syllable is a vowel with at most one consonant in front of it: MA,
-// PA, U. Words made only of those (MA-PA, U-FO, ŻY-RA-FA) are what a child
-// reads first at przedszkole, before anything with a consonant cluster.
-const OPEN_SYLLABLE = /^[^AĄEĘIOÓUY]?[AĄEĘIOÓUY]$/;
+// An open syllable is a vowel with at most one consonant in front of it: BA,
+// NA, U. Words made only of those (BA-NA-NA, U-FO, RA-DI-O) are the easiest to
+// put together, so they come before anything with a consonant cluster.
+const OPEN_SYLLABLE = /^[^AEIOUY]?[AEIOUY]$/;
 
 /**
  * How hard a word is to build, for ordering: fewer syllables first, and among
@@ -19,13 +19,15 @@ const OPEN_SYLLABLE = /^[^AĄEĘIOÓUY]?[AĄEĘIOÓUY]$/;
 export const syllableTier = (word) =>
   word.syllables.length * 2 + (word.syllables.every((s) => OPEN_SYLLABLE.test(s)) ? 0 : 1);
 
-// Decoys are drawn from syllables that actually occur in Polish, so a wrong tile
-// still looks like a piece of a real word rather than obvious filler.
+// Decoys look like pieces of real English words, so a wrong tile does not
+// stand out as obvious filler.
 const COMMON_SYLLABLES = [
-  'MA', 'TA', 'LA', 'KA', 'NA', 'DA', 'BA', 'PA', 'RA', 'SA', 'WA', 'ZA', 'GA',
-  'MO', 'TO', 'LO', 'KO', 'NO', 'DO', 'BO', 'PO', 'RO', 'SO', 'WO',
-  'MI', 'TY', 'LI', 'KI', 'NI', 'DY', 'BY', 'PI', 'RY', 'SY', 'ZY',
-  'MU', 'TU', 'LU', 'KU', 'NU', 'DU', 'BU', 'PU', 'RU', 'SU'
+  'BA', 'DA', 'LA', 'MA', 'NA', 'PA', 'TA',
+  'BO', 'GO', 'LO', 'MO', 'NO', 'PO', 'SO', 'TO',
+  'BI', 'DI', 'LI', 'MI', 'PI', 'TI',
+  'BU', 'DU', 'LU', 'MU', 'PU',
+  'ER', 'IN', 'UN', 'ET', 'OP', 'EN',
+  'TER', 'PER', 'DER', 'LER', 'BLE', 'TLE', 'KET', 'LOW', 'POT', 'SUN'
 ];
 
 /**

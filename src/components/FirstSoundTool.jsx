@@ -14,7 +14,7 @@ import FeedbackModal from './FeedbackModal';
 import SettingsModal from './SettingsModal';
 import Picture from './Picture';
 
-// Words whose first sound is a digraph (CH, SZ, CZ...) are a genuinely harder
+// Words whose first sound is a digraph (CH, SH, TH) are a genuinely harder
 // idea - two letters, one sound - so they are held back for the last setting,
 // with the words a child may not be able to name (HARD_WORDS in wordsData).
 // The easiest setting has three answers, not two: with two, half of all
@@ -29,10 +29,10 @@ const STORAGE_KEY = 'letter_app_firstsound_diff';
 const MODE_KEY = 'letter_app_firstsound_mode';
 const POSITION_KEY = 'letter_app_firstsound_position';
 
-// Which letter of the word the round asks about. The first one is a sound (CH
-// in "chleb" counts as one); the last and the random one are letters, because
-// a word's last letter is not always the sound heard there ("chleb" ends on a
-// B but sounds like P), and a random one is shown in its place in the word.
+// Which letter of the word the round asks about. The first one is a sound (SH
+// in "shark" counts as one); the last and the random one are letters, because
+// a word's last letter is not always the sound heard there ("cheese" ends on
+// an E nobody hears), and a random one is shown in its place in the word.
 const POSITIONS = {
   first: { id: 'first', label: '⬅️ First', title: 'First sound' },
   last: { id: 'last', label: '➡️ Last', title: 'Last letter' },
@@ -41,8 +41,9 @@ const POSITIONS = {
 
 // Two kinds of word are held back, and only when the round is about the first
 // sound: digraph words until the hardest level, and words whose first sound
-// has no letter of its own (firstSound is null - SIEĆ, DZIK, see wordsData).
-// Asked for the last letter of "chleb", the CH does not come into it.
+// is not the sound of its first letter (firstSound is null - GIRAFFE, EIGHT,
+// see wordsData).
+// Asked for the last letter of "cheese", the CH does not come into it.
 const wordsForLevel = (level, position) =>
   wordsData.filter(
     (word) =>
@@ -76,29 +77,25 @@ const itemIdFor = (word, position) => (position === 'first' ? word.id : `${word.
 
 // Round where the picture is given and the child picks the letter.
 //
-// The wrong tiles have to look like the right one could. Drawn only from the
-// plain alphabet, an Ł or an SZ was the one accented or two-letter tile in the
-// row, and a child could answer without looking at the picture at all. So an
-// accented answer comes with at least one other accented letter, a digraph
-// with other digraphs, and a plain answer now and then with one of either -
-// otherwise "the odd tile is never right" would be just as easy a rule.
-const ACCENTED = { first: 'ĆŁÓŚŹŻ', other: 'ĄĆĘŁŃÓŚŹŻ' };
-const DIGRAPHS = ['CH', 'CZ', 'DZ', 'DŻ', 'DŹ', 'RZ', 'SZ'];
-const PLAIN_OF = { Ą: 'A', Ć: 'C', Ę: 'E', Ł: 'L', Ń: 'N', Ó: 'O', Ś: 'S', Ź: 'Z', Ż: 'Z' };
-const plainOf = (letter) => PLAIN_OF[letter] || letter;
+// The wrong tiles have to look like the right one could. Drawn only from single
+// letters, an SH was the one two-letter tile in the row, and a child could
+// answer without looking at the picture at all. So a digraph answer comes with
+// other digraphs, and on the hardest setting a single-letter answer now and
+// then comes with one too - otherwise "the odd tile is never right" would be
+// just as easy a rule.
+const DIGRAPHS = ['CH', 'SH', 'TH'];
 
 const letterDistractors = (answer, level, position) => {
   const need = level.choices - 1;
-  const accented = Array.from(position === 'first' ? ACCENTED.first : ACCENTED.other);
-  const base = plainOf(answer[0]);
-  // A wrong letter must not be another way of writing the right sound: U next
-  // to ÓSEMKA or H next to CHLEB would be a correct answer marked wrong. Below
-  // the hardest setting a letter and its accented twin (L and Ł, Ż and Ź) are
-  // not put side by side either - telling those apart is its own skill.
+  const base = answer[0];
+  // A wrong letter must not be another way of writing the right sound: K next
+  // to CAT would be a correct answer marked wrong. Below the hardest setting a
+  // letter and the digraph that starts with it (S and SH) are not put side by
+  // side either - hearing that difference is its own skill.
   const fits = (letter) =>
     letter !== answer &&
     !(position === 'first' && soundsClash(letter, answer)) &&
-    (level.digraphs || plainOf(letter[0]) !== base);
+    (level.digraphs || letter[0] !== base);
 
   const picked = [];
   const add = (list, howMany) => {
@@ -111,11 +108,7 @@ const letterDistractors = (answer, level, position) => {
   };
 
   if (answer.length > 1) add(DIGRAPHS, Math.ceil(need / 2));
-  else if (PLAIN_OF[answer]) add(accented, Math.max(1, Math.floor(need / 2)));
-  else {
-    if (Math.random() < 0.3) add(accented, 1);
-    if (level.digraphs && position === 'first' && Math.random() < 0.3) add(DIGRAPHS, 1);
-  }
+  else if (level.digraphs && position === 'first' && Math.random() < 0.3) add(DIGRAPHS, 1);
 
   const lookalikes = confusableLetters(base.toLowerCase(), need + 4, { pool: ALPHABET }).map((l) =>
     l.toUpperCase()
@@ -141,8 +134,8 @@ const buildPictureRound = (level, previousId, position = 'first') => {
   const pool = wordsForLevel(level, position);
   const word = pickWord(pool, previousId);
   // "Fits" errs on the side of the child: for the first sound it also covers
-  // a word that starts with the same sound spelt differently (HAK for CH) or
-  // with the same letter (CZAPKA for C), so neither is offered as a wrong one.
+  // a word that starts with the same sound spelt differently (KETTLE for C) or
+  // with the same letter (SHARK for S), so neither is offered as a wrong one.
   const fits = (w, answer) => {
     if (position === 'last') return lettersOf(w)[lettersOf(w).length - 1] === answer;
     if (position === 'random') return lettersOf(w).includes(answer);
@@ -156,7 +149,7 @@ const buildPictureRound = (level, previousId, position = 'first') => {
     picked = target(word, position);
   }
   const { index, answer } = picked;
-  // No two pictures a child could take for each other (KOŃ and JEŹDZIEC).
+  // No two pictures a child could take for each other (HORSE and RIDER).
   const others = [];
   for (const w of shuffle(pool)) {
     if (others.length >= level.choices - 1) break;
@@ -168,7 +161,7 @@ const buildPictureRound = (level, previousId, position = 'first') => {
 };
 
 // In "pick the letter" the word is not printed until it has been answered.
-// It used to be, in the question - "Na jaką głoskę zaczyna się Banan?" with B
+// It used to be, in the question - "What sound does Banana start with?" with B
 // among the answers - which handed a reader the answer and gave a child who
 // cannot read nothing at all; with no voice in the app, the picture is the
 // whole question. The answer names it afterwards.

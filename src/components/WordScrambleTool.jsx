@@ -270,7 +270,7 @@ export default function WordScrambleTool({ onBack }) {
         }
       } else if (e.key === 'Enter') {
         validateWord();
-      } else if (/^[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]$/.test(e.key)) {
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
         // Typing a letter
         const charUpper = e.key.toUpperCase();
         // Find unplaced tile with this character
