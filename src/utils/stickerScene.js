@@ -23,9 +23,9 @@ export const SCENES = ['meadow', 'sea', 'space'];
 // The name read out for each picture's button, and the colour of its frame.
 // The pictures themselves are drawn in components/StickerSceneArt.jsx.
 export const SCENE_INFO = {
-  meadow: { label: 'Łąka', frame: '#16A34A' },
-  sea: { label: 'Morze', frame: '#0E7490' },
-  space: { label: 'Kosmos', frame: '#4338CA' }
+  meadow: { label: 'Meadow', frame: '#16A34A' },
+  sea: { label: 'Sea', frame: '#0E7490' },
+  space: { label: 'Space', frame: '#4338CA' }
 };
 export const MAX_PER_SCENE = 40;
 

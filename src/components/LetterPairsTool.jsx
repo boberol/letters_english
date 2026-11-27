@@ -12,15 +12,15 @@ import FeedbackModal from './FeedbackModal';
 import SettingsModal from './SettingsModal';
 
 const MATCH_MODES = {
-  same: { id: 'same', label: '🔤 To samo (A – A)' },
-  case: { id: 'case', label: '🔠 Wielka i mała (A – a)' },
-  picture: { id: 'picture', label: '🖼️ Litera i obrazek (k – 🐈)' }
+  same: { id: 'same', label: '🔤 The same (A – A)' },
+  case: { id: 'case', label: '🔠 Capital and small (A – a)' },
+  picture: { id: 'picture', label: '🖼️ Letter and picture (c – 🐈)' }
 };
 
 const BOARD_SIZES = {
-  small: { id: 'small', label: 'Mała (2 × 3)', pairs: 3, columns: 3 },
-  medium: { id: 'medium', label: 'Średnia (3 × 4)', pairs: 6, columns: 4 },
-  large: { id: 'large', label: 'Duża (4 × 4)', pairs: 8, columns: 4 }
+  small: { id: 'small', label: 'Small (2 × 3)', pairs: 3, columns: 3 },
+  medium: { id: 'medium', label: 'Medium (3 × 4)', pairs: 6, columns: 4 },
+  large: { id: 'large', label: 'Large (4 × 4)', pairs: 8, columns: 4 }
 };
 
 const MODE_KEY = 'letter_app_pairs_mode';
@@ -176,7 +176,7 @@ export default function LetterPairsTool({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color="#7E22CE" size={28} />
         </button>
@@ -184,7 +184,7 @@ export default function LetterPairsTool({ onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🃏</span>
           <span className="stage-title" style={{ color: '#7E22CE' }}>
-            Pary liter
+            Letter pairs
           </span>
         </div>
 
@@ -194,15 +194,15 @@ export default function LetterPairsTool({ onBack }) {
             sounds.playClick();
             setShowSettings(true);
           }}
-          title="Ustawienia"
-          aria-label="Ustawienia"
+          title="Settings"
+          aria-label="Settings"
         >
           <Sliders size={20} color="#334155" />
         </button>
       </div>
 
       <div className="pairs-progress-pill">
-        Znalezione pary: {matched.length} z {size.pairs}
+        Pairs found: {matched.length} of {size.pairs}
       </div>
 
       <div
@@ -223,7 +223,7 @@ export default function LetterPairsTool({ onBack }) {
               className={`pair-card ${isUp ? 'flipped' : ''} ${isDone ? 'matched' : ''}`}
               onClick={() => handleCard(card)}
               disabled={isDone || showSuccess}
-              aria-label={isUp ? `Karta ${card.label || card.face}` : 'Zakryta karta'}
+              aria-label={isUp ? `Card ${card.label || card.face}` : 'Face-down card'}
             >
               <span className="pair-card-inner">
                 <span className="pair-card-face pair-card-back" aria-hidden="true">
@@ -253,13 +253,13 @@ export default function LetterPairsTool({ onBack }) {
         }}
       >
         <Shuffle size={18} style={{ marginRight: '6px' }} />
-        Nowa gra
+        New game
       </button>
 
       {showSuccess && (
         <FeedbackModal
           color="#7E22CE"
-          title="Wszystkie pary!"
+          title="All the pairs!"
           icon="🎉"
           onDismiss={() => deal()}
           actions={
@@ -270,18 +270,18 @@ export default function LetterPairsTool({ onBack }) {
                 deal();
               }}
             >
-              Jeszcze raz
+              Play again
             </button>
           }
         >
-          Świetna pamięć!
+          Great memory!
         </FeedbackModal>
       )}
 
       {showSettings && (
-        <SettingsModal title="Ustawienia gry" onClose={() => setShowSettings(false)}>
+        <SettingsModal title="Game settings" onClose={() => setShowSettings(false)}>
           <div className="settings-section">
-            <label className="settings-label">Co łączymy w pary:</label>
+            <label className="settings-label">What to match:</label>
             <div className="settings-quick-actions">
               {Object.values(MATCH_MODES).map((option) => (
                 <button
@@ -300,7 +300,7 @@ export default function LetterPairsTool({ onBack }) {
           </div>
 
           <div className="settings-section">
-            <label className="settings-label">Wielkość planszy:</label>
+            <label className="settings-label">Board size:</label>
             <div className="settings-quick-actions">
               {Object.values(BOARD_SIZES).map((option) => (
                 <button

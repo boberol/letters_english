@@ -40,7 +40,7 @@ export default function MenuScreen({ onSelectLetter, onBack }) {
           <button 
             className="back-btn" 
             onClick={() => { sounds.playClick(); onBack(); }}
-            aria-label="Wróć do wyboru zabaw"
+            aria-label="Back to activities"
           >
             <ChevronLeft color="#4F46E5" size={28} aria-hidden="true" />
           </button>
@@ -51,7 +51,7 @@ export default function MenuScreen({ onSelectLetter, onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🔤</span>
           <span className="stage-title" style={{ color: '#4F46E5' }}>
-            Wybierz Literę
+            Choose a Letter
           </span>
         </div>
 
@@ -65,14 +65,14 @@ export default function MenuScreen({ onSelectLetter, onBack }) {
           onClick={() => chooseCase('lower')}
           aria-pressed={letterCase === 'lower'}
         >
-          małe a
+          small a
         </button>
         <button
           className={`quick-chip-btn ${letterCase === 'upper' ? 'active' : ''}`}
           onClick={() => chooseCase('upper')}
           aria-pressed={letterCase === 'upper'}
         >
-          WIELKIE A
+          CAPITAL A
         </button>
       </div>
 
@@ -94,7 +94,7 @@ export default function MenuScreen({ onSelectLetter, onBack }) {
                 sounds.playClick();
                 onSelectLetter(chosen);
               }}
-              aria-label={`Litera ${chosen}`}
+              aria-label={`Letter ${chosen}`}
             >
               {/* A class, not `span:first-child`: that selector also caught the
                   small partner letter (the first element inside this span) and

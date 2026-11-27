@@ -13,14 +13,14 @@ import Countdown from './Countdown';
 import RunSettings from './RunSettings';
 
 const ALL_DIRECTIONS = [
-  { id: 'up', label: 'W górę', icon: '⬆️', angle: 0, key: 'ArrowUp' },
-  { id: 'right', label: 'W prawo', icon: '➡️', angle: 90, key: 'ArrowRight' },
-  { id: 'down', label: 'W dół', icon: '⬇️', angle: 180, key: 'ArrowDown' },
-  { id: 'left', label: 'W lewo', icon: '⬅️', angle: 270, key: 'ArrowLeft' },
-  { id: 'up-right', label: 'Góra-Prawo', icon: '↗️', angle: 45, diagonal: true },
-  { id: 'down-right', label: 'Dół-Prawo', icon: '↘️', angle: 135, diagonal: true },
-  { id: 'down-left', label: 'Dół-Lewo', icon: '↙️', angle: 225, diagonal: true },
-  { id: 'up-left', label: 'Góra-Lewo', icon: '↖️', angle: 315, diagonal: true }
+  { id: 'up', label: 'Up', icon: '⬆️', angle: 0, key: 'ArrowUp' },
+  { id: 'right', label: 'Right', icon: '➡️', angle: 90, key: 'ArrowRight' },
+  { id: 'down', label: 'Down', icon: '⬇️', angle: 180, key: 'ArrowDown' },
+  { id: 'left', label: 'Left', icon: '⬅️', angle: 270, key: 'ArrowLeft' },
+  { id: 'up-right', label: 'Up-Right', icon: '↗️', angle: 45, diagonal: true },
+  { id: 'down-right', label: 'Down-Right', icon: '↘️', angle: 135, diagonal: true },
+  { id: 'down-left', label: 'Down-Left', icon: '↙️', angle: 225, diagonal: true },
+  { id: 'up-left', label: 'Up-Left', icon: '↖️', angle: 315, diagonal: true }
 ];
 
 // Where each answer sits in the quiz's 3x3 grid: [row, column].
@@ -312,22 +312,22 @@ export default function ArrowsTool({ onBack }) {
     <div className="stage-container arrows-tool-container" style={{ backgroundColor: activeArrow.col.bgColor }}>
       {/* Top Header */}
       <div className="stage-header">
-        <button className="back-btn" onClick={() => { sounds.playClick(); onBack(); }} aria-label="Wróć do wyboru zabaw">
+        <button className="back-btn" onClick={() => { sounds.playClick(); onBack(); }} aria-label="Back to activities">
           <ChevronLeft color={activeArrow.col.text} size={28} aria-hidden="true" />
         </button>
 
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🧭</span>
           <span className="stage-title" style={{ color: activeArrow.col.text }}>
-            Kolorowe Strzałki
+            Colourful Arrows
           </span>
         </div>
 
         <button 
           className="settings-toggle-btn"
           onClick={() => { sounds.playClick(); setShowSettings(true); }}
-          title="Ustawienia kierunków i kolorów"
-          aria-label="Ustawienia kierunków i kolorów"
+          title="Direction and colour settings"
+          aria-label="Direction and colour settings"
         >
           <Sliders size={20} color="#334155" aria-hidden="true" />
         </button>
@@ -339,19 +339,19 @@ export default function ArrowsTool({ onBack }) {
           className={`shapes-tab-btn ${toolMode === 'card' ? 'active' : ''}`}
           onClick={() => { sounds.playClick(); setToolMode('card'); stopAutoPlay(); }}
         >
-          <Square size={16} /> Duża Strzałka
+          <Square size={16} /> Big Arrow
         </button>
         <button 
           className={`shapes-tab-btn ${toolMode === 'grid' ? 'active' : ''}`}
           onClick={() => { sounds.playClick(); setToolMode('grid'); stopAutoPlay(); }}
         >
-          <Grid size={16} /> Siatka / Kodowanie
+          <Grid size={16} /> Grid / Coding
         </button>
         <button 
           className={`shapes-tab-btn ${toolMode === 'quiz' ? 'active' : ''}`}
           onClick={() => { sounds.playClick(); setToolMode('quiz'); stopAutoPlay(); }}
         >
-          <HelpCircle size={16} /> Zgadnij Kierunek
+          <HelpCircle size={16} /> Guess the Direction
         </button>
       </div>
 
@@ -392,7 +392,7 @@ export default function ArrowsTool({ onBack }) {
                   {activeArrow.dir.label}
                 </span>
                 <span className="arrow-col-label">
-                  Kolor: <strong>{activeArrow.col.label}</strong>
+                  Colour: <strong>{activeArrow.col.label}</strong>
                 </span>
               </div>
             )}
@@ -403,10 +403,10 @@ export default function ArrowsTool({ onBack }) {
               className="action-btn btn-random-shape"
               onClick={() => { setRunFinished(false); rollNewArrow(true); }}
               disabled={countdown.running}
-              title="Losuj kolejną (Spacja)"
+              title="Next one (Space)"
             >
               <Shuffle size={18} style={{ marginRight: '6px' }} />
-              Losuj kolejną
+              Next one
             </button>
 
             <button 
@@ -418,9 +418,9 @@ export default function ArrowsTool({ onBack }) {
               }}
             >
               {isAutoPlaying || countdown.running ? (
-                <><Pause size={18} style={{ marginRight: '6px' }} /> Zatrzymaj</>
+                <><Pause size={18} style={{ marginRight: '6px' }} /> Stop</>
               ) : (
-                <><Play size={18} style={{ marginRight: '6px' }} /> Auto-slajdy</>
+                <><Play size={18} style={{ marginRight: '6px' }} /> Auto-slides</>
               )}
             </button>
           </div>
@@ -431,7 +431,7 @@ export default function ArrowsTool({ onBack }) {
       {toolMode === 'grid' && (
         <div className="arrow-grid-view">
           <div className="grid-size-selector glass-panel">
-            <span>Rozmiar siatki:</span>
+            <span>Grid size:</span>
             {GRID_SIZES.map(sz => (
               <button
                 key={sz}
@@ -483,9 +483,9 @@ export default function ArrowsTool({ onBack }) {
             ))}
           </div>
 
-          <button className="action-btn btn-random-shape" onClick={rollNewGrid} title="Generuj nową planszę (Spacja)">
+          <button className="action-btn btn-random-shape" onClick={rollNewGrid} title="New board (Space)">
             <Shuffle size={18} style={{ marginRight: '6px' }} />
-            Generuj nową planszę
+            New board
           </button>
         </div>
       )}
@@ -494,7 +494,7 @@ export default function ArrowsTool({ onBack }) {
       {toolMode === 'quiz' && (
         <div className="arrow-quiz-view">
           <div className="quiz-score-badge glass-panel">
-            🎯 Punkty: <strong>{quizScore.correct}</strong> / {quizScore.total}
+            🎯 Points: <strong>{quizScore.correct}</strong> / {quizScore.total}
           </div>
 
           <div 
@@ -519,7 +519,7 @@ export default function ArrowsTool({ onBack }) {
                 />
               </svg>
             </div>
-            <h3 className="quiz-instruction">W którą stronę wskazuje strzałka?</h3>
+            <h3 className="quiz-instruction">Which way does the arrow point?</h3>
           </div>
 
           {/* The answers sit where they point, round the child in the middle:
@@ -547,12 +547,12 @@ export default function ArrowsTool({ onBack }) {
           <div className="quiz-feedback-slot" aria-live="polite">
             {quizFeedback === 'correct' && (
               <div className="quiz-feedback-toast correct">
-                🎉 Brawo! To jest {activeArrow.dir.label}!
+                🎉 Well done! It's {activeArrow.dir.label}!
               </div>
             )}
             {quizFeedback === 'wrong' && (
               <div className="quiz-feedback-toast wrong">
-                ❌ Ups! Spróbuj jeszcze raz!
+                ❌ Oops! Try again!
               </div>
             )}
           </div>
@@ -562,30 +562,30 @@ export default function ArrowsTool({ onBack }) {
       <Countdown count={countdown.count} color={activeArrow.col.color} />
 
       {showSettings && (
-        <SettingsModal title="Ustawienia strzałek" doneLabel="Zastosuj i zamknij" onClose={() => setShowSettings(false)}>
+        <SettingsModal title="Arrow settings" doneLabel="Apply and close" onClose={() => setShowSettings(false)}>
           <div className="settings-section">
-            <h3>1. Liczba kierunków ({selectedDirectionIds.length} aktywnych):</h3>
+            <h3>1. Number of directions ({selectedDirectionIds.length} on):</h3>
             <div className="settings-quick-actions">
               <button 
                 className={`quick-chip-btn ${selectedDirectionIds.length === 2 ? 'active' : ''}`}
                 aria-pressed={selectedDirectionIds.length === 2}
                 onClick={() => setDirectionPreset(2)}
               >
-                ↔️ 2 Kierunki (Lewo / Prawo)
+                ↔️ 2 Directions (Left / Right)
               </button>
               <button 
                 className={`quick-chip-btn ${selectedDirectionIds.length === 4 ? 'active' : ''}`}
                 aria-pressed={selectedDirectionIds.length === 4}
                 onClick={() => setDirectionPreset(4)}
               >
-                🧭 4 Kierunki (Krzyżowe)
+                🧭 4 Directions (Cross)
               </button>
               <button 
                 className={`quick-chip-btn ${selectedDirectionIds.length === 8 ? 'active' : ''}`}
                 aria-pressed={selectedDirectionIds.length === 8}
                 onClick={() => setDirectionPreset(8)}
               >
-                ⭐ 8 Kierunków (Ze skosami)
+                ⭐ 8 Directions (With diagonals)
               </button>
             </div>
 
@@ -609,8 +609,8 @@ export default function ArrowsTool({ onBack }) {
 
           <div className="settings-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>2. Kolory strzałek ({selectedColorIds.length} aktywnych):</h3>
-              <button className="text-link-btn" onClick={selectAllColors}>Wszystkie</button>
+              <h3>2. Arrow colours ({selectedColorIds.length} on):</h3>
+              <button className="text-link-btn" onClick={selectAllColors}>All</button>
             </div>
             <div className="colors-selection-grid">
               {ALL_COLORS.map(c => {
@@ -636,8 +636,8 @@ export default function ArrowsTool({ onBack }) {
           </div>
 
           <RunSettings
-            title="3. Auto-slajdy - ile strzałek:"
-            unit="strzałkach"
+            title="3. Auto-slides - how many arrows:"
+            unit="arrows"
             repetitions={repetitions}
             onRepetitions={setRepetitions}
             countdown={useCountdownSetting}
@@ -645,7 +645,7 @@ export default function ArrowsTool({ onBack }) {
           />
 
           <div className="settings-section">
-            <h3>4. Opcje wyświetlania:</h3>
+            <h3>4. Display options:</h3>
             <div className="settings-options-list">
               <label className="settings-checkbox-label">
                 <input
@@ -653,7 +653,7 @@ export default function ArrowsTool({ onBack }) {
                   checked={showLabels}
                   onChange={(e) => setShowLabels(e.target.checked)}
                 />
-                <span>Pokazuj napisy z nazwą kierunku i koloru</span>
+                <span>Show the direction and colour names</span>
               </label>
             </div>
           </div>

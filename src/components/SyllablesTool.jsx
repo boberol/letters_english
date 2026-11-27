@@ -13,12 +13,12 @@ import { useRound } from '../hooks/useRound';
 import { loadChoice, saveChoice } from '../utils/storage';
 
 // Difficulty is the length of the words in the pool plus how many decoy
-// syllables get mixed in. Two-syllable open words are where a Polish child
+// syllables get mixed in. Two-syllable words are where a child
 // starts, so that is the easy setting rather than a shorter time limit.
 const LEVELS = {
-  two: { id: 'two', label: '🟢 Dwie sylaby', maxSyllables: 2, extras: 0 },
-  three: { id: 'three', label: '🟡 Do trzech sylab', maxSyllables: 3, extras: 1 },
-  decoys: { id: 'decoys', label: '🔴 Dłuższe + zmyłki', maxSyllables: 9, extras: 2 }
+  two: { id: 'two', label: '🟢 Two syllables', maxSyllables: 2, extras: 0 },
+  three: { id: 'three', label: '🟡 Up to three syllables', maxSyllables: 3, extras: 1 },
+  decoys: { id: 'decoys', label: '🔴 Longer + decoys', maxSyllables: 9, extras: 2 }
 };
 
 const DIFF_KEY = 'letter_app_syll_diff';
@@ -130,7 +130,7 @@ export default function SyllablesTool({ onBack }) {
     setPlaced(next);
     setFeedback(null);
 
-    // Only celebrate on its own. A wrong answer waits for "Sprawdź!", so the
+    // Only celebrate on its own. A wrong answer waits for "Check!", so the
     // child gets a moment to look at what they built before being told.
     if (next.every((t) => t !== null) && next.map((t) => t.text).join('') === currentWord.syllables.join('')) {
       validate(next);
@@ -170,11 +170,11 @@ export default function SyllablesTool({ onBack }) {
   // not jump down and back up with every answer.
   let banner = null;
   if (feedback === 'wrong') {
-    banner = <div className="scramble-feedback-banner error">Jeszcze nie to 🤔 Spróbuj!</div>;
+    banner = <div className="scramble-feedback-banner error">Not quite 🤔 Try again!</div>;
   } else if (feedback === 'success') {
     banner = (
       <div className="scramble-feedback-banner success">
-        Brawo! 🌟 <strong>{currentWord.syllables.join(' - ')}</strong>
+        Well done! 🌟 <strong>{currentWord.syllables.join(' - ')}</strong>
       </div>
     );
   }
@@ -191,7 +191,7 @@ export default function SyllablesTool({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color={currentWord.color} size={28} />
         </button>
@@ -199,7 +199,7 @@ export default function SyllablesTool({ onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🧩</span>
           <span className="stage-title" style={{ color: currentWord.color }}>
-            Sylaby
+            Syllables
           </span>
         </div>
 
@@ -209,8 +209,8 @@ export default function SyllablesTool({ onBack }) {
             sounds.playClick();
             setShowSettings(true);
           }}
-          title="Poziom trudności"
-          aria-label="Poziom trudności"
+          title="Difficulty"
+          aria-label="Difficulty"
         >
           <Sliders size={20} color="#334155" aria-hidden="true" />
         </button>
@@ -224,7 +224,7 @@ export default function SyllablesTool({ onBack }) {
             setMode('build');
           }}
         >
-          <Blocks size={16} /> Ułóż słowo
+          <Blocks size={16} /> Build the word
         </button>
         <button
           className={`shapes-tab-btn ${mode === 'count' ? 'active' : ''}`}
@@ -233,7 +233,7 @@ export default function SyllablesTool({ onBack }) {
             setMode('count');
           }}
         >
-          <Hash size={16} /> Policz sylaby
+          <Hash size={16} /> Count syllables
         </button>
       </div>
 
@@ -269,7 +269,7 @@ export default function SyllablesTool({ onBack }) {
                     backgroundColor: tile ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)'
                   }}
                   aria-label={
-                    tile ? `Sylaba ${tile.text} — kliknij, aby cofnąć` : `Puste pole ${idx + 1}`
+                    tile ? `Syllable ${tile.text} - tap to take it back` : `Empty space ${idx + 1}`
                   }
                 >
                   {tile ? (
@@ -283,7 +283,7 @@ export default function SyllablesTool({ onBack }) {
 
             <div className="scramble-tiles-section">
               <div className="scramble-message-row" aria-live="polite">
-                {banner || <div className="scramble-pool-title">Wybierz sylaby po kolei:</div>}
+                {banner || <div className="scramble-pool-title">Pick the syllables in order:</div>}
               </div>
               <div className="scramble-tiles-grid">
                 {tiles.map((tile) => {
@@ -295,7 +295,7 @@ export default function SyllablesTool({ onBack }) {
                       className={`syllable-tile ${used ? 'used' : ''}`}
                       onClick={() => handleTile(tile)}
                       disabled={used}
-                      aria-label={`Sylaba ${tile.text}`}
+                      aria-label={`Syllable ${tile.text}`}
                     >
                       {tile.text}
                     </button>
@@ -307,7 +307,7 @@ export default function SyllablesTool({ onBack }) {
         ) : (
           <>
             <div className="scramble-message-row" aria-live="polite">
-              {banner || <p className="scramble-pool-title">Ile sylab ma to słowo?</p>}
+              {banner || <p className="scramble-pool-title">How many syllables does this word have?</p>}
             </div>
             <div className={`count-options ${shake ? 'shake' : ''}`}>
               {countOptions.map((value) => (
@@ -318,7 +318,7 @@ export default function SyllablesTool({ onBack }) {
                   style={{ borderColor: currentWord.color, color: currentWord.color }}
                   onClick={() => handleCount(value)}
                   disabled={feedback === 'success'}
-                  aria-label={`${value} sylaby`}
+                  aria-label={`${value} syllables`}
                 >
                   {value}
                 </button>
@@ -333,8 +333,8 @@ export default function SyllablesTool({ onBack }) {
         <button
           className="action-btn btn-secondary-round"
           onClick={handlePrev}
-          title="Poprzednie słowo"
-          aria-label="Poprzednie słowo"
+          title="Previous word"
+          aria-label="Previous word"
         >
           ◀
         </button>
@@ -346,9 +346,9 @@ export default function SyllablesTool({ onBack }) {
           active={mode}
           options={{
             build: (
-              <button className="action-btn btn-check" onClick={() => validate()} title="Sprawdź">
+              <button className="action-btn btn-check" onClick={() => validate()} title="Check">
                 <Check size={18} style={{ marginRight: '6px' }} />
-                Sprawdź!
+                Check!
               </button>
             ),
             count: null
@@ -358,29 +358,29 @@ export default function SyllablesTool({ onBack }) {
         <button
           className="action-btn btn-secondary-round"
           onClick={handleNext}
-          title="Następne słowo"
-          aria-label="Następne słowo"
+          title="Next word"
+          aria-label="Next word"
         >
           ▶
         </button>
       </div>
 
       <div className="shape-tracker-pill">
-        Słowo {safeIdx + 1} z {words.length}
+        Word {safeIdx + 1} of {words.length}
       </div>
 
       {showSettings && (
         <SettingsModal
-          title="Ustawienia sylab"
+          title="Syllable settings"
           onClose={() => setShowSettings(false)}
           summary={
             <>
-              Słów w puli: <strong>{words.length}</strong>
+              Words in the pool: <strong>{words.length}</strong>
             </>
           }
         >
           <div className="settings-section">
-            <span className="settings-label">Poziom trudności:</span>
+            <span className="settings-label">Difficulty:</span>
             <div className="settings-quick-actions">
               {Object.values(LEVELS).map((option) => (
                 <button

@@ -1,7 +1,7 @@
 export const themes = {
   bee: {
     id: "bee",
-    name: "Pszczółka",
+    name: "Bee",
     icon: "🐝",
     color: "#A16207", // yellow-700 - readable on the light tile background
     bgColor: "#FEF9C3", // yellow-100
@@ -9,7 +9,7 @@ export const themes = {
   },
   dolphin: {
     id: "dolphin",
-    name: "Delfin",
+    name: "Dolphin",
     icon: "🐬",
     color: "#0E7490", // cyan-700 - readable on the light tile background
     bgColor: "#CFFAFE", // cyan-100
@@ -17,7 +17,7 @@ export const themes = {
   },
   spider: {
     id: "spider",
-    name: "Pająk",
+    name: "Spider",
     icon: "🕷️",
     color: "#7E22CE", // purple-700 - readable on the light tile background
     bgColor: "#F3E8FF", // purple-100
@@ -25,7 +25,7 @@ export const themes = {
   },
   giraffe: {
     id: "giraffe",
-    name: "Żyrafa",
+    name: "Giraffe",
     icon: "🦒",
     color: "#C2410C", // orange-700 - readable on the light tile background
     bgColor: "#FFEDD5", // orange-100

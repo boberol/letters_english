@@ -254,7 +254,7 @@ export default function MetronomeTool({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color={COLOR} size={28} />
         </button>
@@ -262,7 +262,7 @@ export default function MetronomeTool({ onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🎵</span>
           <span className="stage-title" style={{ color: COLOR }}>
-            Metronom
+            Metronome
           </span>
         </div>
 
@@ -272,8 +272,8 @@ export default function MetronomeTool({ onBack }) {
             sounds.playClick();
             setShowSettings(true);
           }}
-          title="Ustawienia"
-          aria-label="Ustawienia metronomu"
+          title="Settings"
+          aria-label="Metronome settings"
         >
           <Sliders size={20} color="#334155" aria-hidden="true" />
         </button>
@@ -285,7 +285,7 @@ export default function MetronomeTool({ onBack }) {
         type="button"
         className={`metronome-face glass-panel ${isPlaying ? 'is-playing' : ''}`}
         onClick={togglePlaying}
-        aria-label={running ? 'Zatrzymaj metronom' : 'Włącz metronom'}
+        aria-label={running ? 'Stop the metronome' : 'Start the metronome'}
         aria-pressed={running}
       >
         <svg viewBox="0 0 200 220" className="metronome-svg" aria-hidden="true">
@@ -333,7 +333,7 @@ export default function MetronomeTool({ onBack }) {
           <span className="metronome-bpm-value" style={{ color: COLOR }}>
             {bpm}
           </span>
-          <span className="metronome-bpm-unit">na minutę</span>
+          <span className="metronome-bpm-unit">per minute</span>
           {beatLimit > 0 && (isPlaying || beatsDone > 0) && (
             <span className="metronome-beat-count">
               {beatsDone} / {beatLimit}
@@ -347,8 +347,8 @@ export default function MetronomeTool({ onBack }) {
             className="metronome-step-btn"
             onClick={() => stepBpm(-STEP_BPM)}
             disabled={bpm <= MIN_BPM}
-            aria-label="Wolniej"
-            title="Wolniej"
+            aria-label="Slower"
+            title="Slower"
           >
             <Picture emoji="🐢" size="2rem" />
           </button>
@@ -362,7 +362,7 @@ export default function MetronomeTool({ onBack }) {
             value={bpm}
             onChange={(e) => setBpm(clampBpm(Number(e.target.value)))}
             aria-label="Tempo"
-            aria-valuetext={`${bpm} uderzeń na minutę`}
+            aria-valuetext={`${bpm} beats per minute`}
             style={{ '--fill': share }}
           />
 
@@ -371,8 +371,8 @@ export default function MetronomeTool({ onBack }) {
             className="metronome-step-btn"
             onClick={() => stepBpm(STEP_BPM)}
             disabled={bpm >= MAX_BPM}
-            aria-label="Szybciej"
-            title="Szybciej"
+            aria-label="Faster"
+            title="Faster"
           >
             <Picture emoji="🐇" size="2rem" />
           </button>
@@ -397,10 +397,10 @@ export default function MetronomeTool({ onBack }) {
       <Countdown count={countdown.count} color={COLOR} />
 
       {showSettings && (
-        <SettingsModal title="Ustawienia metronomu" onClose={() => setShowSettings(false)}>
+        <SettingsModal title="Metronome settings" onClose={() => setShowSettings(false)}>
           <RunSettings
-            title="Ile uderzeń:"
-            unit="uderzeniach"
+            title="How many beats:"
+            unit="beats"
             options={BEAT_OPTIONS}
             repetitions={beatLimit}
             onRepetitions={setBeatLimit}

@@ -21,10 +21,10 @@ import liczbyIcon from '../assets/menu-icons/liczby.webp';
 // past that a child has to scan the whole screen to find the one they want, so
 // related activities sit together under a heading they can learn the shape of.
 const SECTIONS = [
-  { id: 'hand', label: 'Ćwicz rękę', order: 1 },
-  { id: 'letters', label: 'Poznaj litery', order: 2 },
-  { id: 'words', label: 'Dźwięki i słowa', order: 3 },
-  { id: 'rewards', label: 'Nagrody', order: 4 }
+  { id: 'hand', label: 'Warm up your hand', order: 1 },
+  { id: 'letters', label: 'Learn letters', order: 2 },
+  { id: 'words', label: 'Sounds and words', order: 3 },
+  { id: 'rewards', label: 'Rewards', order: 4 }
 ];
 
 // Cards lead with the picture and a one or two word name: most of the children
@@ -35,8 +35,8 @@ const TOOLS_LIST = [
   {
     id: 'shapes',
     section: 'hand',
-    name: 'Kształty',
-    subtitle: 'Linie i figury',
+    name: 'Shapes',
+    subtitle: 'Lines and shapes',
     icon: ksztaltyIcon,
     color: '#047857',
     bgColor: '#ECFDF5'
@@ -44,8 +44,8 @@ const TOOLS_LIST = [
   {
     id: 'patterns',
     section: 'hand',
-    name: 'Szlaczki',
-    subtitle: 'Rodziny wzorków',
+    name: 'Patterns',
+    subtitle: 'Pattern families',
     icon: szlaczkiIcon,
     color: '#B45309',
     bgColor: '#FEF3C7'
@@ -53,8 +53,8 @@ const TOOLS_LIST = [
   {
     id: 'arrows',
     section: 'hand',
-    name: 'Strzałki',
-    subtitle: 'Poznaj kierunki',
+    name: 'Arrows',
+    subtitle: 'Learn directions',
     icon: strzalkiIcon,
     color: '#4D7C0F',
     bgColor: '#F7FEE7'
@@ -62,8 +62,8 @@ const TOOLS_LIST = [
   {
     id: 'numbers',
     section: 'hand',
-    name: 'Liczby',
-    subtitle: 'Liczby i kolory',
+    name: 'Numbers',
+    subtitle: 'Numbers and colours',
     icon: liczbyIcon,
     color: '#1D4ED8',
     bgColor: '#EFF6FF'
@@ -71,8 +71,8 @@ const TOOLS_LIST = [
   {
     id: 'metronome',
     section: 'hand',
-    name: 'Metronom',
-    subtitle: 'Rysuj w rytm',
+    name: 'Metronome',
+    subtitle: 'Draw to the beat',
     icon: metronomIcon,
     color: '#0F766E',
     bgColor: '#F0FDFA'
@@ -80,8 +80,8 @@ const TOOLS_LIST = [
   {
     id: 'letters',
     section: 'letters',
-    name: 'Litery',
-    subtitle: 'Pisz po śladzie',
+    name: 'Letters',
+    subtitle: 'Trace the letters',
     icon: literyIcon,
     color: '#4338CA',
     bgColor: '#EEF2FF'
@@ -89,8 +89,8 @@ const TOOLS_LIST = [
   {
     id: 'find-letter',
     section: 'letters',
-    name: 'Znajdź literę',
-    subtitle: 'Wskaż taką samą',
+    name: 'Find the letter',
+    subtitle: 'Spot the same one',
     icon: znajdzIcon,
     color: '#0E7490',
     bgColor: '#ECFEFF'
@@ -98,8 +98,8 @@ const TOOLS_LIST = [
   {
     id: 'letter-pairs',
     section: 'letters',
-    name: 'Pary liter',
-    subtitle: 'Odkryj dwie takie same',
+    name: 'Letter pairs',
+    subtitle: 'Find two the same',
     icon: paryIcon,
     color: '#7E22CE',
     bgColor: '#F3E8FF'
@@ -107,8 +107,8 @@ const TOOLS_LIST = [
   {
     id: 'first-sound',
     section: 'words',
-    name: 'Pierwsza głoska',
-    subtitle: 'Na jaką literę?',
+    name: 'First sound',
+    subtitle: 'Which letter?',
     icon: gloskaIcon,
     color: '#BE123C',
     bgColor: '#FFF1F2'
@@ -116,8 +116,8 @@ const TOOLS_LIST = [
   {
     id: 'syllables',
     section: 'words',
-    name: 'Sylaby',
-    subtitle: 'Ułóż z sylab',
+    name: 'Syllables',
+    subtitle: 'Build from syllables',
     icon: sylabyIcon,
     color: '#C2410C',
     bgColor: '#FFEDD5'
@@ -125,8 +125,8 @@ const TOOLS_LIST = [
   {
     id: 'word-scramble',
     section: 'words',
-    name: 'Słowa',
-    subtitle: 'Układaj literki',
+    name: 'Words',
+    subtitle: 'Spell with letters',
     icon: slowaIcon,
     color: '#A21CAF',
     bgColor: '#FDF4FF'
@@ -134,8 +134,8 @@ const TOOLS_LIST = [
   {
     id: 'sticker-book',
     section: 'rewards',
-    name: 'Moje naklejki',
-    subtitle: 'Przyklejaj na obrazki',
+    name: 'My stickers',
+    subtitle: 'Stick them on pictures',
     icon: wynikiIcon,
     color: '#BE185D',
     bgColor: '#FDF2F8'
@@ -161,27 +161,27 @@ function ParentPanel({ onClose }) {
   };
 
   return (
-    <SettingsModal title="Dla rodzica" onClose={onClose} doneLabel="Zamknij">
+    <SettingsModal title="For grown-ups" onClose={onClose} doneLabel="Close">
       <div className="settings-section">
-        <span className="settings-label">Gwiazdki i naklejki</span>
+        <span className="settings-label">Stars and stickers</span>
         <p className="parent-panel-text">
           {done
-            ? 'Postępy wyzerowane. Można zaczynać od nowa.'
+            ? 'Progress cleared. Ready to start again.'
             : confirming
-              ? 'Na pewno? Znikną wszystkie gwiazdki, naklejki i obrazki z naklejkami. Tego nie da się cofnąć.'
-              : 'Zaczyna od zera: przydaje się, gdy tablet dostaje młodsze rodzeństwo.'}
+              ? 'Are you sure? All stars, stickers and sticker pictures will be deleted. This cannot be undone.'
+              : 'Starts again from zero: handy when the tablet is passed on to a younger brother or sister.'}
         </p>
         {!done && (
           <button type="button" className={`action-btn ${confirming ? 'btn-clear' : 'btn-replay'}`} onClick={resetProgress}>
-            {confirming ? 'Tak, wyzeruj' : 'Wyzeruj postępy'}
+            {confirming ? 'Yes, clear it' : 'Clear progress'}
           </button>
         )}
       </div>
       <div className="settings-section">
-        <span className="settings-label">Prywatność</span>
+        <span className="settings-label">Privacy</span>
         <p className="parent-panel-text">
           <a href="/polityka-prywatnosci.html" target="_blank" rel="noopener">
-            Polityka prywatności
+            Privacy policy
           </a>
         </p>
       </div>
@@ -194,7 +194,7 @@ export default function ToolsMenu({ onSelectTool }) {
   return (
     <div className="tools-menu-container">
       <img className="app-logo" src={logoUrl} alt="PlayGoo" width="312" height="106" />
-      <h1 className="tools-main-title">W co dziś gramy?</h1>
+      <h1 className="tools-main-title">What shall we play today?</h1>
 
       {SECTIONS.slice()
         .sort((a, b) => a.order - b.order)
@@ -242,7 +242,7 @@ export default function ToolsMenu({ onSelectTool }) {
           child closes again, and the policy link and starting over live in it. */}
       <footer className="tools-footer">
         <button type="button" className="tools-footer-btn" onClick={() => { sounds.playClick(); setParentOpen(true); }}>
-          Dla rodzica
+          For grown-ups
         </button>
       </footer>
 

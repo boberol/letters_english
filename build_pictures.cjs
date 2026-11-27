@@ -3,7 +3,7 @@
 // Run: node build_pictures.cjs <folder-of-pngs>
 //
 // The pictures arrive as 822px PNGs named after the word they show
-// ("żółw.png"), about 400 KB each - 81 MB for the set. The app precaches
+// ("tortoise.png"), about 400 KB each - 81 MB for the set. The app precaches
 // everything it ships so it can run with no network, so they are scaled to
 // SIZE pixels and written as WebP into src/assets/pictures/words/, about 17 KB
 // each. SIZE is twice the largest circle a picture is drawn in, so it stays
@@ -11,15 +11,13 @@
 //
 // Two things about the names:
 //
-//  - Output names are ASCII ("zolw.webp"), for the same reason the letter files
-//    are: a name carrying a Polish character has to survive the filesystem, the
-//    bundler's glob and a string comparison, and those do not agree on how to
-//    normalise one. The slug here is the same fold as `slugOf` in
-//    src/data/wordsData.js, which is how a word finds its picture.
+//  - Output names are the word in lower case with nothing else in it
+//    ("deckchair.webp"), the same as `slugOf` in src/data/wordsData.js, which
+//    is how a word finds its picture. Spaces, hyphens and capitals in an
+//    export's name are dropped, so "Deck chair.png" still lands on DECKCHAIR.
 //  - A file name is only a pointer to a picture; the spelling a child sees
-//    comes from wordsData.js. So an export called "slonce.png" or "słonce.png"
-//    still lands on the word SŁOŃCE. The script ends by listing any picture no
-//    word uses and any word left without a picture, and fails if there are any.
+//    comes from wordsData.js. The script ends by listing any picture no word
+//    uses and any word left without a picture, and fails if there are any.
 //
 // The originals are not kept in the repository (81 MB); re-export them and
 // re-run this rather than editing the WebP files.
@@ -58,19 +56,15 @@ const findChrome = () => {
   return found;
 };
 
-const FOLD = { ą: 'a', ć: 'c', ę: 'e', ł: 'l', ń: 'n', ó: 'o', ś: 's', ź: 'z', ż: 'z' };
-
-// "Żółw.png" -> "zolw". Some unzip tools write a character they cannot encode
-// as #U017c; those are turned back first.
+// "Deck chair.png" -> "deckchair". Some unzip tools write a character they
+// cannot encode as #U00e9; those are turned back first.
 const slugOf = (fileName) =>
   path
     .parse(fileName)
     .name.replace(/#U([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
     .normalize('NFC')
     .toLowerCase()
-    .replace(/[ąćęłńóśźż]/g, (c) => FOLD[c])
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9]+/g, '');
 
 // --- a very small DevTools protocol client (as in build_icons.cjs) ----------
 

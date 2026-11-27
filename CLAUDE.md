@@ -324,8 +324,8 @@ roll counter - so a repeat is visibly new. Auto-slides in both, and the metronom
 `sounds.playCountdown`). The metronome's beat limit stops queuing at the limit and stops the run half
 a beat after the last tick.
 
-Pierwsza głoska has a position setting: first sound, last letter, or a random letter shown in place
-in the word. The last and random ones are letters, not sounds ("chleb" ends on B). See **Pictures**
+First Sound has a position setting: first sound, last letter, or a random letter shown in place
+in the word. The last and random ones are letters, not sounds ("cheese" ends on a silent E). See **Pictures**
 for which words are asked about their first sound and which answers may sit next to each other.
 
 ### Progress and rewards
@@ -381,8 +381,8 @@ positions as fractions of the picture so an arrangement survives a rotation; at 
 
 The app was always built to run without a network — artwork bundled, sounds synthesised, no
 requests at runtime — but that only pays off once the page itself survives being offline, so
-`vite-plugin-pwa` (Workbox, `generateSW`) precaches the whole build: 280 entries, about 4.1 MiB.
-Most of that is the 197 word illustrations (`webp`, about 15 KB each - see **Pictures**); the rest
+`vite-plugin-pwa` (Workbox, `generateSW`) precaches the whole build: 261 entries, about 3.8 MiB.
+Most of that is the 179 word illustrations (`webp`, about 15 KB each - see **Pictures**); the rest
 is the JS bundle, the twelve home-screen card pictures and four Szlaczki animals (about 160 KB), the two Andika font files (24 KB), the icons and the few sticker SVGs too large
 to have been inlined. The icons are palette PNGs (about 150 KB for all four); the full-colour
 exports were 640 KB and doubled the first download. The letter and
@@ -529,59 +529,62 @@ pointing at them. Some notes above still mention the licence as the reason for a
 
 ### Pictures
 
-**One word bank, `data/wordsData.js`, feeds all four picture games** - Słowa (Rozsypanka), Sylaby,
-Pierwsza głoska and the picture mode of Pary liter. A word is one row, `w('ŻY-RA-FA', 'animals',
+**One word bank, `data/wordsData.js`, feeds all four picture games** - Word Scramble, Syllables,
+First Sound and the picture mode of Letter Pairs. A word is one row, `w('GI-RAFFE', 'animals',
 'amber', 'clue')`: the syllables spell the word, and everything else (`id`, `name`, `length`,
 `firstSound`, `digraph`, colours) is derived. `syllablesData.js` is just the rows with two
 syllables or more. The file imports nothing, because `build_pictures.cjs` loads it with Node.
 
 - **Each word has an illustration in `src/assets/pictures/words/`, found by the word's `id`** - its
-  spelling folded to ASCII (ŻÓŁW -> `zolw.webp`), for the same reason the letter files are ASCII.
-  `<Picture word={word.id} />` shows it. The illustrations are white discs with transparent
-  corners, so they fill a round frame edge to edge rather than sitting inside one.
+  spelling in lower case (TORTOISE -> `tortoise.webp`). `<Picture word={word.id} />` shows it. The
+  illustrations are white discs with transparent corners, so they fill a round frame edge to edge
+  rather than sitting inside one.
+- **The pictures came from the Polish app and were renamed to their English word** (November 2026).
+  179 of its 197 were kept. The 18 dropped ones needed two words in English (ice cream, fishing rod,
+  watering can, pencil case, Christmas tree), were words a pre-reader will not know (set square,
+  vice, rowan), were pictures of people that have dated badly (the Eskimo and Indian), or were the
+  Polish flag. Several were renamed to what is drawn rather
+  than translated word for word: `euro` is COIN, `ul` BEEHIVE, `list` ENVELOPE, `osemka` EIGHT.
+  **No word starts with Q or X, and I, K, O, U, Y and Z have one word each**; new pictures for those
+  letters (queen, quilt, van, yo-yo, kite, octopus...) are waiting on artwork.
 - **`node build_pictures.cjs <folder-of-pngs>` makes them.** The originals are 822px PNGs named
-  after the word, 81 MB for the set, and are not in the repository; the script scales them to 400px
-  WebP (twice the largest frame, 2.9 MB in all) by driving Chrome like `build_icons.cjs`, so it
-  needs no image library. It ends by listing any picture without a word and any word without a
-  picture, and fails if there are any. Do not hand-edit the WebP files - with one exception:
-  `flaga.webp` was exported as the Swedish flag and was recoloured to the Polish one in place
-  (November 2026). Re-export `flaga.png` as a Polish flag before the next full run, or it comes back.
-  Four other exports did not show their word, so the word was changed to what is drawn: `reka`
-  (one hand, was RĘCE), `gora` (was GÓRY), `mikrofon` (was DŹWIĘK) and `oczy` (was ŹRENICA).
-  Name the PNGs that way in the export folder.
-- **A file name is a pointer, not the spelling.** The export had `słonce`, `dzwig`, `dzwięk`,
-  `gałąż`, `gwożdzie`, `zjeżdzalnia` and `łabędz`; all fold to the same slug as the correct word, and
-  the spelling a child sees comes from `wordsData.js` (SŁOŃCE, DŹWIG, DŹWIĘK, GAŁĄŹ, GWOŹDZIE,
-  ZJEŻDŻALNIA, ŁABĘDŹ).
-- **The word names exactly what is drawn, including how many** - two boots are BUTY. Look at the
+  after the word, not in the repository; the script scales them to 400px WebP (twice the largest
+  frame, about 15 KB each) by driving Chrome like `build_icons.cjs`, so it needs no image library.
+  Spaces, hyphens and capitals in a file name are dropped ("Deck chair.png" -> `deckchair`). It ends
+  by listing any picture without a word and any word without a picture, and fails if there are any.
+  Do not hand-edit the WebP files.
+- **The word names exactly what is drawn, including how many** - two boots are BOOTS. Look at the
   picture before adding a word.
-- **Syllables** split a consonant pair in the middle of a word (LAM-PA, CZAP-KA), unless the second
-  is L, Ł or R after a stop, which start a syllable together (TY-GRYS, CE-GŁA, E-KRAN).
+- **Syllables** are clapped the way Reception teaches: a double consonant is split (HAM-MOCK,
+  BAL-LOON) and so is a pair in the middle of a word (WIN-DOW), unless the two make one sound
+  (DOL-PHIN, FEATH-ER). The syllables must spell the word exactly.
 
 **First sounds are judged by sound, and where sound and spelling disagree the word is not asked.**
-`firstSound` is the sound as written: a digraph for CH, CZ, DZ, DŻ, DŹ, RZ, SZ (held back for the
-hard level), and `null` for the six words whose first sound is a soft one spelt with an I - SIEĆ
-starts with Ś, NICI with Ń, DZIK with DŹ. Marking S right would teach the wrong sound and marking Ś
-right contradicts the spelling, so those words are left out of first-sound rounds and still appear
-wherever the question is about letters. `soundsClash` keeps two answers apart when they are the
-same sound spelt differently (Ó and U, CH and H, RZ and Ż) or start with the same letter (C and
-CZ): U is never offered against ÓSEMKA, and a HAK is never a wrong picture for CH.
+`firstSound` is the sound as written: a digraph for CH, SH and TH (held back for the hard level;
+WH counts as W), and `null` for the words in `NO_FIRST_SOUND` - a soft C or G (CIRCUS, GIRAFFE,
+GENIE, GINGER), PH (PHONE), and vowels that are not their short sound (EIGHT, EYES, ONION, ACORNS,
+APRON, UFO, ARMCHAIR, ACCORDION, ELECTRICIAN). Marking the letter right would teach the wrong sound
+and marking the sound right contradicts the spelling, so those words are left out of first-sound
+rounds and still appear wherever the question is about letters. A new word whose first sound is
+not its first letter's phonics sound goes into that set. `soundsClash` keeps two answers apart when
+they are the same sound spelt differently (C and K) or start with the same letter (S and SH): K is
+never offered against CAT, and a KETTLE is never a wrong picture for C.
 
-**The right answer must not be the odd tile out.** Drawn from the 23 base letters alone, the answer
-for ŁOŚ was the only accented tile and the answer for SZOPA the only two-letter one, so a child could
-win without hearing anything. `letterDistractors` in Pierwsza głoska gives an accented answer at
-least one other accented letter, a digraph other digraphs, and a plain answer now and then one of
-either. Below the hardest level a letter and its accented twin (L and Ł) are never side by side.
+**The right answer must not be the odd tile out.** Drawn from single letters alone, the answer for
+SHARK was the only two-letter tile, so a child could win without hearing anything.
+`letterDistractors` in First Sound gives a digraph answer other digraphs, and on the hardest setting
+a single-letter answer now and then gets one too. Below the hardest level a letter and the digraph
+that starts with it (S and SH) are never side by side.
 
-**`HARD_WORDS` wait for the hardest setting** of Pierwsza głoska, sit out Pary liter and come last in
-Słowa and Sylaby: words a pre-reader may not know (IMADŁO, CYRKIEL, EURO) and pictures likely to be
-named as something else (a rider is "koń", a foal "konik"). **`PICTURE_GROUPS`** are pictures a child
-can take for each other (KOŃ, JEŹDZIEC, ŹREBAK, DŻOKEJ; MOTYL and ĆMA; NOGA and BUTY; DZIENNIK and
-NOTES); `picturesClash` keeps them out of the same round. Add to both when a new picture is
-ambiguous.
+**`HARD_WORDS` wait for the hardest setting** of First Sound, sit out Letter Pairs and come last in
+Word Scramble and Syllables: words a pre-reader may not know (COMPASSES, BOLT, FLOUR) and pictures
+likely to be named as something else (a hare is "a rabbit", a foal "a horse", a bison "a cow").
+**`PICTURE_GROUPS`** are pictures a child can take for each other (HORSE, RIDER, FOAL, JOCKEY;
+BUTTERFLY and MOTH; DEER and MOOSE; BOAT and YACHT...); `picturesClash` keeps them out of the same
+round. Add to both when a new picture is ambiguous.
 
-**Słowa and Sylaby step through words easiest first, shuffled inside each difficulty**
-(`shuffledByTier`) - by length in Słowa, by syllable count and then open syllables in Sylaby - in a
+**Word Scramble and Syllables step through words easiest first, shuffled inside each difficulty**
+(`shuffledByTier`) - by length in Word Scramble, by syllable count and then open syllables in Syllables - in a
 new order each time the game is opened. In file order a child met the same first word every time.
 
 **Picture frames are sized from the height the screen has left**, like the canvases: `--pic` on

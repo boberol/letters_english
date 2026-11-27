@@ -26,14 +26,14 @@ export default class ErrorBoundary extends React.Component {
         <div className="error-fallback-picture" aria-hidden="true">
           🙈
         </div>
-        <p className="error-fallback-text">Ups, coś poszło nie tak.</p>
+        <p className="error-fallback-text">Oops, something went wrong.</p>
         <button
           className="action-btn btn-next error-fallback-btn"
           onClick={() => {
             this.setState({ failed: false });
             this.props.onReset?.();
           }}
-          aria-label="Wróć do zabaw"
+          aria-label="Back to activities"
         >
           <RotateCcw size={22} aria-hidden="true" />
         </button>

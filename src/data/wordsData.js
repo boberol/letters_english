@@ -1,29 +1,29 @@
-// The word bank behind every picture game: Rozsypanka, Sylaby, Pierwsza głoska
-// and the picture mode of Pary liter.
+// The word bank behind every picture game: Word Scramble, Syllables, First
+// Sound and the picture mode of Letter Pairs.
 //
 // Each word has a drawing in src/assets/pictures/words/, found by the word's
-// `id` - its spelling folded to ASCII (ŻÓŁW -> zolw.webp). The drawings are
-// made by `node build_pictures.cjs <folder>`, which also checks that every word
-// here has a picture and every picture a word.
+// `id` - its spelling in lower case (TORTOISE -> tortoise.webp). The drawings
+// are made by `node build_pictures.cjs <folder>`, which also checks that every
+// word here has a picture and every picture a word.
 //
 // The word is the answer to the picture, so it names exactly what is drawn,
-// including how many: two boots are BUTY, one sock would be a SKARPETA.
+// including how many: two boots are BOOTS, one sock would be a SOCK.
 //
 // This file imports nothing, on purpose: build_pictures.cjs loads it with Node.
 
 export const wordsCategories = [
-  { id: 'all', name: 'Wszystkie', icon: '🌟' },
-  { id: 'animals', name: 'Zwierzęta', icon: '🐾' },
-  { id: 'food', name: 'Jedzenie', icon: '🍎' },
-  { id: 'objects', name: 'Przedmioty', icon: '🧸' },
-  { id: 'nature', name: 'Przyroda', icon: '🌳' },
-  { id: 'vehicles', name: 'Pojazdy', icon: '🚗' },
-  { id: 'people', name: 'Ludzie', icon: '🧑' },
-  { id: 'body', name: 'Ciało', icon: '✋' },
-  { id: 'places', name: 'Miejsca', icon: '🏠' },
-  { id: 'school', name: 'Szkoła', icon: '✏️' },
-  { id: 'music', name: 'Muzyka', icon: '🎵' },
-  { id: 'tools', name: 'Narzędzia', icon: '🔨' }
+  { id: 'all', name: 'All', icon: '🌟' },
+  { id: 'animals', name: 'Animals', icon: '🐾' },
+  { id: 'food', name: 'Food', icon: '🍎' },
+  { id: 'objects', name: 'Things', icon: '🧸' },
+  { id: 'nature', name: 'Nature', icon: '🌳' },
+  { id: 'vehicles', name: 'Vehicles', icon: '🚗' },
+  { id: 'people', name: 'People', icon: '🧑' },
+  { id: 'body', name: 'Body', icon: '✋' },
+  { id: 'places', name: 'Places', icon: '🏠' },
+  { id: 'school', name: 'School', icon: '✏️' },
+  { id: 'music', name: 'Music', icon: '🎵' },
+  { id: 'tools', name: 'Tools', icon: '🔨' }
 ];
 
 // [letters and borders, page background]. The first is dark enough to read as
@@ -45,63 +45,67 @@ const PALETTE = {
   slate: ['#475569', '#F1F5F9']
 };
 
-const FOLD = { Ą: 'a', Ć: 'c', Ę: 'e', Ł: 'l', Ń: 'n', Ó: 'o', Ś: 's', Ź: 'z', Ż: 'z' };
+// TORTOISE -> tortoise. The same name build_pictures.cjs gives a file.
+export const slugOf = (word) => word.toLowerCase();
 
-// ŻÓŁW -> zolw. The same fold build_pictures.cjs applies to a file name.
-export const slugOf = (word) =>
-  word
-    .toUpperCase()
-    .replace(/[ĄĆĘŁŃÓŚŹŻ]/g, (c) => FOLD[c])
-    .toLowerCase();
+// Two letters that make one sound at the start of a word. WH is left out on
+// purpose: WHEELBARROW starts with the sound of W, and W is the right answer.
+const DIGRAPHS = ['CH', 'SH', 'TH'];
 
-// Two letters that are one sound at the start of a word.
-const DIGRAPHS = ['CH', 'CZ', 'DZ', 'DŻ', 'DŹ', 'RZ', 'SZ'];
+// Words whose first sound is not the sound their first letter is taught with
+// in phonics: a soft C or G (CIRCUS, GIRAFFE), PH, and vowels that say their
+// name or something else again (EIGHT, EYES, ONION, ACORNS, UFO). Marking the
+// letter right would teach the wrong sound, and marking the sound right
+// contradicts the spelling, so these words are not asked about their first
+// sound. They still appear everywhere a question is about letters.
+const NO_FIRST_SOUND = new Set([
+  'ACCORDION', 'ACORNS', 'APRON', 'ARMCHAIR', 'CIRCUS', 'EIGHT', 'ELECTRICIAN', 'EYES', 'GENIE',
+  'GINGER', 'GIRAFFE', 'ONION', 'PHONE', 'UFO'
+]);
 
 /**
  * The sound a word starts with, as it is written - or null where the first
- * sound has no letter of its own to show.
- *
- * That is the soft sounds spelt with an I: SIEĆ starts with the sound Ś, NICI
- * with Ń, DZIK with DŹ. Asking a child for the first sound of "sieć" and then
- * marking S right would teach the wrong sound, and marking Ś right contradicts
- * the spelling they will meet later, so those words are simply not asked about
- * their first sound. They still appear everywhere a question is about letters.
+ * sound is not the one its first letter stands for (see NO_FIRST_SOUND).
  */
 const firstSoundOf = (word) => {
-  if (/^(DZ|S|C|Z|N)I/.test(word)) return null;
+  if (NO_FIRST_SOUND.has(word)) return null;
   const two = word.slice(0, 2);
   return DIGRAPHS.includes(two) ? two : word[0];
 };
 
-// Different spellings of one sound: ósemka and ul start alike, and so do
-// chleb and hak, rzeka and żaba.
-const SAME_SOUND = { Ó: 'U', CH: 'H', RZ: 'Ż' };
+// Different spellings of one sound: CAT and KETTLE start alike.
+const SAME_SOUND = { C: 'K' };
 const soundKey = (sound) => SAME_SOUND[sound] || sound;
 
 /**
  * Whether two first sounds are too close to sit on opposite sides of a
- * question: the same sound spelt differently (H and CH), or the same first
- * letter (C and CZ - a child shown the letter C may fairly point at a czapka).
+ * question: the same sound spelt differently (C and K), or the same first
+ * letter (S and SH - a child shown the letter S may fairly point at a shark).
  */
 export const soundsClash = (a, b) => !!a && !!b && (soundKey(a) === soundKey(b) || a[0] === b[0]);
 
 // Words a pre-reader may not know, or whose picture they will likely name as
-// something else (a rider on a horse is "koń", a foal is "konik", a notebook
-// could be either DZIENNIK or NOTES). With no voice and the word hidden until
-// "Brawo", the child has to name the picture unaided, so these wait for the
-// hardest setting of Pierwsza głoska and come last in Słowa and Sylaby.
+// something else (a hare is "a rabbit", a foal "a horse", a bison "a cow").
+// With no voice and the word hidden until "Well done", the child has to name
+// the picture unaided, so these wait for the hardest setting of First Sound
+// and come last in Word Scramble and Syllables.
 const HARD_WORDS = new Set([
-  'ĆMA', 'CYRKIEL', 'DZIENNIK', 'DŻIN', 'DŻOKEJ', 'EKIERKA', 'EKRAN', 'EKSPRES', 'EURO', 'IGŁA',
-  'IMADŁO', 'IMBIR', 'JEŹDZIEC', 'NOGA', 'NOTES', 'RZEMYK', 'TELEFON', 'ŹREBAK'
+  'BAUBLE', 'BISON', 'BOLT', 'COIN', 'COMPASSES', 'DECKCHAIR', 'DIARY', 'FLOUR', 'FOAL', 'GENIE',
+  'GINGER', 'HARE', 'JOCKEY', 'LEG', 'MOOSE', 'MOTH', 'NEEDLE', 'NOTEBOOK', 'PHONE', 'RIDER',
+  'SCREEN', 'STUMP'
 ]);
 
 // Pictures a child can take for one another. Never offered side by side, or a
-// child who taps the rider for K is marked wrong.
+// child who taps the rider for H is marked wrong.
 const PICTURE_GROUPS = [
-  ['KOŃ', 'JEŹDZIEC', 'ŹREBAK', 'DŻOKEJ'],
-  ['MOTYL', 'ĆMA'],
-  ['NOGA', 'BUTY'],
-  ['DZIENNIK', 'NOTES']
+  ['HORSE', 'RIDER', 'FOAL', 'JOCKEY'],
+  ['BUTTERFLY', 'MOTH'],
+  ['LEG', 'BOOTS'],
+  ['DIARY', 'NOTEBOOK'],
+  ['DEER', 'MOOSE'],
+  ['BISON', 'COW'],
+  ['BOAT', 'YACHT'],
+  ['COIN', 'MONEY']
 ];
 
 export const picturesClash = (a, b) =>
@@ -130,208 +134,189 @@ const w = (syllables, category, colour, hint) => {
   };
 };
 
-// Syllables follow the way a word is clapped out at przedszkole: a consonant
-// pair in the middle of a word is split (LAM-PA, CZAP-KA), unless the second
-// one is L, Ł or R after a stop, which start a syllable together (TY-GRYS,
-// CE-GŁA, E-KRAN).
+// Syllables follow the way a word is clapped out in Reception: a double
+// consonant is split (HAM-MOCK, BAL-LOON), and so is a pair in the middle of a
+// word (WIN-DOW, HAM-STER), unless the two make one sound (DOL-PHIN, FEATH-ER).
 export const wordsData = [
-  w('A-KOR-DE-ON', 'music', 'red', 'Instrument z klawiszami i miechem, który się rozciąga.'),
-  w('A-NA-NAS', 'food', 'yellow', 'Słodki owoc z kolczastą skórką i zielonym pióropuszem.'),
-  w('AR-BUZ', 'food', 'green', 'Wielki owoc, zielony z wierzchu i czerwony w środku.'),
-  w('AR-MA-TA', 'objects', 'slate', 'Wielka lufa na kołach, która strzela kulami.'),
-  w('AU-TO-BUS', 'vehicles', 'lime', 'Długi pojazd, który wozi wielu pasażerów po mieście.'),
-  w('A-WO-KA-DO', 'food', 'green', 'Zielony owoc z wielką pestką w środku.'),
-  w('BA-LO-NIK', 'objects', 'red', 'Dmuchana zabawka na sznurku, która leci do góry.'),
-  w('BA-NAN', 'food', 'yellow', 'Żółty, podłużny owoc, przysmak małpek.'),
-  w('BAŁ-WAN', 'objects', 'sky', 'Ulepiony ze śniegu, ma nos z marchewki.'),
-  w('BOMB-KA', 'objects', 'blue', 'Błyszcząca ozdoba, którą wieszamy na choince.'),
-  w('BU-RAK', 'food', 'pink', 'Ciemnoczerwone warzywo, z którego gotuje się barszcz.'),
-  w('BU-TY', 'objects', 'brown', 'Zakładamy je na nogi, zanim wyjdziemy z domu.'),
-  w('CE-BU-LA', 'food', 'orange', 'Warzywo, przy którego krojeniu lecą łzy.'),
-  w('CE-GŁA', 'objects', 'orange', 'Czerwony klocek, z którego buduje się domy.'),
-  w('CHLEB', 'food', 'amber', 'Pieczywo z chrupiącą skórką prosto z piekarni.'),
-  w('CHO-IN-KA', 'nature', 'green', 'Zielone drzewko, które w grudniu stroimy bombkami.'),
-  w('CHO-MIK', 'animals', 'orange', 'Mały gryzoń, który chowa jedzenie w policzkach.'),
-  w('CHUS-TA', 'objects', 'red', 'Kawałek materiału, który wiąże się na głowie lub szyi.'),
-  w('CU-KIE-REK', 'food', 'pink', 'Słodki smakołyk zawinięty w papierek.'),
-  w('CYRK', 'places', 'red', 'Wielki namiot, w którym występują klauni i akrobaci.'),
-  w('CYR-KIEL', 'school', 'slate', 'Przyrząd, którym rysuje się równe kółka.'),
-  w('CY-TRY-NA', 'food', 'yellow', 'Bardzo kwaśny, żółty owoc.'),
-  w('CZAJ-NIK', 'objects', 'red', 'Gotuje się w nim wodę na herbatę.'),
-  w('CZAP-KA', 'objects', 'teal', 'Zakładamy ją na głowę, kiedy jest zimno.'),
-  w('CZE-KO-LA-DA', 'food', 'brown', 'Słodka brązowa tabliczka z kakao.'),
-  w('DEL-FIN', 'animals', 'sky', 'Mądry morski ssak, który wyskakuje nad fale.'),
-  w('DES-KO-ROL-KA', 'objects', 'orange', 'Deska na czterech kółkach do jeżdżenia i skakania.'),
-  w('DI-NO-ZAUR', 'animals', 'lime', 'Wielki gad, który żył na Ziemi bardzo dawno temu.'),
-  w('DOM', 'places', 'red', 'Mieszkamy w nim razem z rodziną.'),
-  w('DRA-BI-NA', 'tools', 'brown', 'Ma szczeble, po których wchodzi się wysoko.'),
-  w('DRZE-WO', 'nature', 'green', 'Ma pień, gałęzie i zieloną koronę z liści.'),
-  w('DZIA-DEK', 'people', 'teal', 'Tata mamy albo taty.'),
-  w('DZIEN-NIK', 'school', 'blue', 'Zeszyt, w którym zapisuje się, co się wydarzyło.'),
-  w('DZIK', 'animals', 'brown', 'Dziki kuzyn świni, który mieszka w lesie.'),
-  w('DZWO-NEK', 'music', 'amber', 'Kiedy nim potrząsasz, robi dzyń, dzyń.'),
-  w('DŹWIG', 'vehicles', 'yellow', 'Wielka maszyna, która podnosi ciężary na budowie.'),
-  w('MI-KRO-FON', 'music', 'pink', 'Mówi się albo śpiewa do niego, żeby było głośniej.'),
-  w('DŻEM', 'food', 'red', 'Słodki przysmak z owoców w słoiku, do smarowania chleba.'),
-  w('DŻIN', 'people', 'purple', 'Wychodzi z lampy i spełnia trzy życzenia.'),
-  w('DŻO-KEJ', 'people', 'purple', 'Jeździec, który ściga się na koniu.'),
-  w('E-KIER-KA', 'school', 'sky', 'Trójkątna linijka do rysowania prostych kątów.'),
-  w('E-KRAN', 'objects', 'slate', 'Na nim wyświetla się obraz z komputera.'),
-  w('EKS-PRES', 'objects', 'slate', 'Maszyna, która parzy kawę.'),
-  w('E-LEK-TRYK', 'people', 'blue', 'Naprawia gniazdka, kable i światło.'),
-  w('ES-KI-MOS', 'people', 'brown', 'Mieszkaniec mroźnej północy w ciepłym futrze.'),
-  w('EU-RO', 'objects', 'amber', 'Pieniądz, którym płaci się w wielu krajach Europy.'),
-  w('FAR-TUCH', 'objects', 'pink', 'Zakładamy go do gotowania, żeby się nie pobrudzić.'),
-  w('FI-GI', 'food', 'purple', 'Słodkie fioletowe owoce z mnóstwem drobnych pestek.'),
-  w('FLA-GA', 'objects', 'red', 'Biało-czerwona, powiewa na maszcie.'),
-  w('FO-KA', 'animals', 'slate', 'Morskie zwierzę z płetwami, które lubi leżeć na brzegu.'),
-  w('FO-TEL', 'objects', 'green', 'Miękkie, wygodne siedzisko z oparciem.'),
-  w('FRYT-KI', 'food', 'yellow', 'Chrupiące paski smażonych ziemniaków.'),
-  w('GAR-NEK', 'objects', 'slate', 'Gotuje się w nim zupę.'),
-  w('GA-ŁĄŹ', 'nature', 'lime', 'Wyrasta z pnia drzewa i ma na sobie liście.'),
-  w('GI-TA-RA', 'music', 'brown', 'Instrument ze strunami, które szarpie się palcami.'),
-  w('GLO-BUS', 'school', 'sky', 'Okrągła mapa całej Ziemi, którą można obracać.'),
-  w('GO-RYL', 'animals', 'slate', 'Największa i najsilniejsza z małp.'),
-  w('GRUSZ-KA', 'food', 'lime', 'Soczysty owoc, wąski u góry i szeroki na dole.'),
-  w('GRZYB', 'nature', 'red', 'Rośnie w lesie, ma nóżkę i kapelusz.'),
-  w('GU-ZIK', 'objects', 'brown', 'Mały krążek z dziurkami do zapinania ubrań.'),
-  w('GWOŹ-DZIE', 'tools', 'slate', 'Wbija się je młotkiem w deskę.'),
-  w('GÓ-RA', 'nature', 'slate', 'Bardzo wysoka i skalista, na szczycie często leży śnieg.'),
-  w('GĘŚ', 'animals', 'amber', 'Duży ptak z długą szyją, który głośno gęga.'),
-  w('HAK', 'tools', 'yellow', 'Zagięty kawałek metalu do zaczepiania i podnoszenia.'),
-  w('HA-MAK', 'objects', 'red', 'Wisi między dwoma drzewami i można się w nim bujać.'),
-  w('HE-LI-KOP-TER', 'vehicles', 'red', 'Lata dzięki wielkiemu śmigłu na dachu.'),
-  w('HI-PO-PO-TAM', 'animals', 'purple', 'Wielkie, grube zwierzę, które lubi siedzieć w wodzie.'),
-  w('HU-LAJ-NO-GA', 'vehicles', 'blue', 'Stoisz na niej jedną nogą, a drugą się odpychasz.'),
-  w('HUŚ-TAW-KA', 'objects', 'brown', 'Bujasz się na niej na placu zabaw.'),
-  w('I-GLO', 'places', 'sky', 'Domek zbudowany z bloków śniegu.'),
-  w('I-GŁA', 'objects', 'pink', 'Cienka i ostra, z uszkiem na nitkę, służy do szycia.'),
-  w('I-MA-DŁO', 'tools', 'red', 'Narzędzie, które mocno ściska i trzyma przedmioty.'),
-  w('IM-BIR', 'food', 'amber', 'Ostry w smaku korzeń, dodawany do herbaty i pierników.'),
-  w('IN-DIA-NIN', 'people', 'orange', 'Nosi pióropusz i mieszka w namiocie tipi.'),
-  w('IN-DYK', 'animals', 'brown', 'Duży ptak z czerwonym koralem i ogonem jak wachlarz.'),
-  w('JABŁ-KO', 'food', 'red', 'Okrągły, soczysty owoc, który rośnie na jabłoni.'),
-  w('JA-BŁOŃ', 'nature', 'green', 'Drzewo, na którym rosną jabłka.'),
-  w('JA-GO-DY', 'food', 'indigo', 'Małe granatowe owoce, które rosną w lesie.'),
-  w('JAJ-KO', 'food', 'orange', 'Znosi je kura, a w środku ma żółtko.'),
-  w('JA-RZĘ-BI-NA', 'nature', 'orange', 'Czerwone koraliki, które jesienią rosną na drzewie.'),
-  w('JAS-KÓŁ-KA', 'animals', 'indigo', 'Ptak z rozwidlonym ogonem, który lepi gniazda pod dachem.'),
-  w('JE-LEŃ', 'animals', 'brown', 'Leśne zwierzę z wielkim, rozłożystym porożem.'),
-  w('JEŹ-DZIEC', 'people', 'green', 'Człowiek, który jedzie na koniu.'),
-  w('JEŻ', 'animals', 'brown', 'Małe zwierzątko, które ma kolce na grzbiecie.'),
-  w('KACZ-KA', 'animals', 'green', 'Ptak, który pływa po stawie i robi kwa, kwa.'),
-  w('KA-RET-KA', 'vehicles', 'red', 'Samochód na sygnale, który wiezie chorych do szpitala.'),
-  w('KASK', 'objects', 'red', 'Twarda czapka, która chroni głowę.'),
-  w('KO-NEW-KA', 'tools', 'sky', 'Podlewa się nią kwiaty w ogrodzie.'),
-  w('KOT', 'animals', 'slate', 'Mruczy, miauczy i łapie myszy.'),
-  w('KOŃ', 'animals', 'brown', 'Ma grzywę i kopyta, rży i szybko galopuje.'),
-  w('KOŚĆ', 'objects', 'amber', 'Przysmak każdego psa.'),
-  w('KRO-WA', 'animals', 'slate', 'Robi muu i daje mleko.'),
-  w('LAM-PA', 'objects', 'yellow', 'Świeci w pokoju, kiedy robi się ciemno.'),
-  w('LE-ŻAK', 'objects', 'blue', 'Składane siedzisko do odpoczywania na plaży.'),
-  w('LIST', 'objects', 'red', 'Wkłada się go do koperty i wysyła pocztą.'),
-  w('LIŚĆ', 'nature', 'orange', 'Rośnie na gałęzi, a jesienią spada z drzewa.'),
-  w('LO-DY', 'food', 'pink', 'Zimny, słodki deser w wafelku.'),
-  w('LOR-NET-KA', 'objects', 'slate', 'Patrzysz przez nią i widzisz z bliska to, co daleko.'),
-  w('LU-PA', 'school', 'amber', 'Szkło, które powiększa małe rzeczy.'),
-  w('MA-LI-NY', 'food', 'pink', 'Słodkie różowe owoce, które rosną na krzaczkach.'),
-  w('MA-PA', 'school', 'amber', 'Rysunek, który pokazuje drogi, miasta i kraje.'),
-  w('MAR-CHEW-KA', 'food', 'orange', 'Pomarańczowe warzywo, przysmak królika.'),
-  w('MO-TYL', 'animals', 'orange', 'Owad z kolorowymi skrzydłami, który lata nad kwiatami.'),
-  w('MRÓW-KA', 'animals', 'slate', 'Malutki, pracowity owad, który mieszka w mrowisku.'),
-  w('MUSZ-LA', 'nature', 'amber', 'Znajdziesz ją na plaży, a w środku szumi morze.'),
-  w('MYSZ', 'animals', 'brown', 'Mały gryzoń z długim ogonkiem, który boi się kota.'),
-  w('MĄ-KA', 'food', 'amber', 'Biały proszek, z którego piecze się chleb i ciasto.'),
-  w('NA-MIOT', 'places', 'green', 'Domek z materiału, w którym śpi się na biwaku.'),
-  w('NAR-TY', 'objects', 'sky', 'Dwie długie deski do zjeżdżania po śniegu.'),
-  w('NI-CI', 'objects', 'blue', 'Cienkie i długie, nawinięte na szpulkę, do szycia.'),
-  w('NIE-DŹWIEDŹ', 'animals', 'brown', 'Wielki, silny zwierz, który zimą śpi w gawrze.'),
-  w('NO-GA', 'body', 'brown', 'Masz dwie i dzięki nim chodzisz, biegasz i skaczesz.'),
-  w('NO-TES', 'school', 'slate', 'Mały zeszyt do zapisywania ważnych rzeczy.'),
-  w('NO-ŻYCZ-KI', 'school', 'pink', 'Tnie się nimi papier.'),
-  w('OD-KU-RZACZ', 'objects', 'red', 'Głośna maszyna, która wciąga kurz z podłogi.'),
-  w('OG-NIS-KO', 'nature', 'orange', 'Pali się na polanie i można przy nim piec kiełbaski.'),
-  w('O-GÓ-REK', 'food', 'green', 'Zielone, podłużne warzywo, dobre na kanapkę.'),
-  w('OK-NO', 'objects', 'brown', 'Przez nie wpada do pokoju światło.'),
-  w('O-KU-LA-RY', 'objects', 'sky', 'Nosi się je na nosie, żeby lepiej widzieć.'),
-  w('O-LIW-KI', 'food', 'lime', 'Małe zielone i czarne owoce, z których robi się oliwę.'),
-  w('PA-RA-SOL', 'objects', 'blue', 'Rozkładasz go, żeby schować się przed deszczem albo słońcem.'),
-  w('PIE-NIĄ-DZE', 'objects', 'green', 'Banknoty i monety, którymi płaci się w sklepie.'),
-  w('PIES', 'animals', 'amber', 'Szczeka, merda ogonem i jest przyjacielem człowieka.'),
-  w('PIEŃ', 'nature', 'brown', 'Gruba część drzewa pokryta korą, w środku ma słoje.'),
-  w('PIZ-ZA', 'food', 'red', 'Okrągły włoski placek z serem i sosem pomidorowym.'),
-  w('PIÓR-KO', 'nature', 'teal', 'Lekkie jak puch, zgubił je ptak.'),
-  w('PIÓR-NIK', 'school', 'blue', 'Trzymasz w nim kredki, ołówki i gumkę.'),
-  w('PIŁ-KA', 'objects', 'red', 'Okrągła zabawka do rzucania, kopania i odbijania.'),
-  w('PLAS-TER', 'objects', 'orange', 'Nakleja się go na skaleczenie.'),
-  w('POMP-KA', 'tools', 'red', 'Pompuje się nią koła w rowerze.'),
-  w('PĄ-CZEK', 'food', 'amber', 'Okrągłe słodkie ciastko z nadzieniem w środku.'),
-  w('RA-DIO', 'music', 'brown', 'Gra muzykę i mówi wiadomości.'),
-  w('RA-KIE-TA', 'vehicles', 'red', 'Leci w kosmos, aż do gwiazd.'),
-  w('RE-KIN', 'animals', 'slate', 'Groźna morska ryba z ostrymi zębami.'),
-  w('RO-BOT', 'objects', 'slate', 'Maszyna, która potrafi ruszać się jak człowiek.'),
-  w('RO-GA-LIK', 'food', 'amber', 'Wygięte, chrupiące pieczywo w kształcie księżyca.'),
-  w('RO-WER', 'vehicles', 'blue', 'Ma dwa koła, pedały i dzwonek.'),
-  w('RY-BA', 'animals', 'teal', 'Pływa w wodzie, ma płetwy i łuski.'),
-  w('RZE-KA', 'nature', 'sky', 'Woda, która płynie przez łąki i miasta aż do morza.'),
-  w('RZE-MYK', 'objects', 'brown', 'Cienki skórzany pasek do wiązania.'),
-  w('RZEŹ-BA', 'objects', 'slate', 'Postać wykuta z kamienia przez artystę.'),
-  w('RĘ-KA', 'body', 'orange', 'Ma pięć palców, a ty masz dwie takie.'),
-  w('SA-MO-CHÓD', 'vehicles', 'blue', 'Pojazd na czterech kołach z kierownicą i silnikiem.'),
-  w('SAN-KI', 'objects', 'brown', 'Zjeżdża się na nich zimą z górki.'),
-  w('SER', 'food', 'yellow', 'Żółty, z dziurami, robi się go z mleka.'),
-  w('SIEĆ', 'objects', 'amber', 'Rybak łowi nią ryby.'),
-  w('SKAR-PE-TY', 'objects', 'blue', 'Zakładasz je na stopy, zanim włożysz buty.'),
-  w('SU-SZAR-KA', 'objects', 'orange', 'Dmucha ciepłym powietrzem i suszy mokre włosy.'),
-  w('SZO-PA', 'places', 'brown', 'Mały drewniany domek na narzędzia i drewno.'),
-  w('SZPI-NAK', 'food', 'green', 'Zielone liście pełne witamin.'),
-  w('SZU-FLA-DA', 'objects', 'brown', 'Wysuwa się ją z szafki i chowa w niej różne rzeczy.'),
-  w('SŁOŃ-CE', 'nature', 'yellow', 'Świeci na niebie i daje nam światło i ciepło.'),
-  w('SŁOŃ', 'animals', 'slate', 'Olbrzym z długą trąbą i wielkimi uszami.'),
-  w('TACZ-KA', 'tools', 'brown', 'Wózek z jednym kołem do wożenia ziemi.'),
-  w('TA-LERZ', 'objects', 'blue', 'Nakłada się na niego obiad.'),
-  w('TE-LE-FON', 'objects', 'slate', 'Dzwoni, a ty mówisz do słuchawki: halo!'),
-  w('TRAK-TOR', 'vehicles', 'red', 'Silny pojazd z wielkimi kołami, który pracuje w polu.'),
-  w('TU-LI-PAN', 'nature', 'red', 'Wiosenny kwiat w kształcie kielicha.'),
-  w('TY-GRYS', 'animals', 'orange', 'Wielki dziki kot w czarne paski.'),
-  w('U-CZEŃ', 'people', 'indigo', 'Chłopiec, który chodzi do szkoły i odrabia lekcje.'),
-  w('U-FO', 'vehicles', 'indigo', 'Latający talerz z kosmosu.'),
-  w('UL', 'objects', 'amber', 'Domek, w którym mieszkają pszczoły i robią miód.'),
-  w('U-LI-CA', 'places', 'slate', 'Droga w mieście, po której jeżdżą samochody.'),
-  w('U-MY-WAL-KA', 'objects', 'sky', 'Myjesz nad nią ręce i zęby.'),
-  w('US-TA', 'body', 'red', 'Nimi mówisz, jesz i się uśmiechasz.'),
-  w('WA-LIZ-KA', 'objects', 'teal', 'Pakujesz do niej ubrania, kiedy jedziesz w podróż.'),
-  w('WAN-NA', 'objects', 'sky', 'Nalewasz do niej wody i bierzesz kąpiel.'),
-  w('WI-DE-LEC', 'objects', 'purple', 'Ma ząbki i nabija się na niego jedzenie.'),
-  w('WIER-TAR-KA', 'tools', 'green', 'Narzędzie, które wierci dziury w ścianie.'),
-  w('WILK', 'animals', 'slate', 'Leśny drapieżnik, który wyje do księżyca.'),
-  w('WRÓ-BEL', 'animals', 'brown', 'Mały szarobrązowy ptaszek, który ćwierka.'),
-  w('WUL-KAN', 'nature', 'red', 'Góra, z której wypływa gorąca lawa.'),
-  w('WĘD-KA', 'objects', 'brown', 'Długi kij z żyłką i haczykiem do łowienia ryb.'),
-  w('ZA-JĄC', 'animals', 'amber', 'Ma długie uszy i szybko kica po polu.'),
-  w('ZA-MEK', 'places', 'blue', 'Wielka budowla z wieżami, w której mieszka król.'),
-  w('ZE-BRA', 'animals', 'slate', 'Wygląda jak koń w czarno-białe paski.'),
-  w('ZE-GA-REK', 'objects', 'indigo', 'Nosi się go na ręce i pokazuje godzinę.'),
-  w('ZJEŻ-DŻAL-NIA', 'objects', 'red', 'Wchodzisz po drabince i zjeżdżasz w dół na placu zabaw.'),
-  w('ZŁO-DZIEJ', 'people', 'slate', 'Zabiera cudze rzeczy i ucieka z workiem.'),
-  w('Ó-SEM-KA', 'objects', 'sky', 'Cyfra, która wygląda jak dwa kółka, jedno na drugim.'),
-  w('ĆMA', 'animals', 'orange', 'Nocny motyl, który leci do światła.'),
-  w('ŁA-BĘDŹ', 'animals', 'sky', 'Duży biały ptak z długą, wygiętą szyją.'),
-  w('ŁAW-KA', 'school', 'brown', 'Siada się na niej w parku, żeby odpocząć.'),
-  w('ŁO-PA-TA', 'tools', 'brown', 'Kopie się nią dołki w ziemi.'),
-  w('ŁOŚ', 'animals', 'brown', 'Wielki leśny zwierz z rogami jak łopaty.'),
-  w('ŁYŻ-WA', 'objects', 'sky', 'But z ostrzem do jazdy po lodzie.'),
-  w('ŁÓD-KA', 'vehicles', 'brown', 'Pływa się nią po jeziorze, machając wiosłami.'),
-  w('ŚRU-BA', 'tools', 'teal', 'Metalowy trzpień z gwintem, na który nakręca się nakrętkę.'),
-  w('ŚWIECZ-KA', 'objects', 'yellow', 'Pali się małym płomykiem i daje światło.'),
-  w('ŹRE-BAK', 'animals', 'brown', 'Dziecko konia.'),
-  w('O-CZY', 'body', 'blue', 'Masz dwoje i nimi patrzysz.'),
-  w('ŻA-BA', 'animals', 'green', 'Zielona, skacze i kumka nad stawem.'),
-  w('ŻA-GLÓW-KA', 'vehicles', 'sky', 'Łódka z żaglem, którą popycha wiatr.'),
-  w('ŻO-ŁĘ-DZIE', 'nature', 'brown', 'Owoce dębu w małych czapeczkach.'),
-  w('ŻUBR', 'animals', 'brown', 'Największe zwierzę polskiej puszczy, kuzyn bizona.'),
-  w('ŻY-RA-FA', 'animals', 'amber', 'Najwyższe zwierzę, z bardzo długą szyją.'),
-  w('ŻÓŁW', 'animals', 'green', 'Powolne zwierzę, które nosi swój domek na grzbiecie.')
+  w('AC-COR-DI-ON', 'music', 'red', 'You squeeze it in and out and press its keys to play a tune.'),
+  w('A-CORNS', 'nature', 'brown', 'Little nuts from an oak tree, with tiny caps.'),
+  w('AM-BU-LANCE', 'vehicles', 'red', 'It races to hospital with its siren on.'),
+  w('ANT', 'animals', 'slate', 'A tiny, busy insect that lives in a big nest.'),
+  w('AP-PLE', 'food', 'red', 'A round, crunchy fruit that grows on a tree.'),
+  w('A-PRON', 'objects', 'pink', 'You wear it when you cook, to stay clean.'),
+  w('ARM-CHAIR', 'objects', 'green', 'A soft, comfy seat with arms.'),
+  w('AV-O-CA-DO', 'food', 'green', 'A green fruit with a big stone in the middle.'),
+  w('BALL', 'objects', 'red', 'A round toy for throwing, kicking and bouncing.'),
+  w('BAL-LOON', 'objects', 'red', 'You blow it up, tie it on a string and it floats.'),
+  w('BA-NA-NA', 'food', 'yellow', 'A long yellow fruit that monkeys love.'),
+  w('BATH', 'objects', 'sky', 'You fill it with water and have a soak.'),
+  w('BAU-BLE', 'objects', 'blue', 'A shiny ball we hang on the Christmas tree.'),
+  w('BEAR', 'animals', 'brown', 'A big, strong animal that sleeps all winter.'),
+  w('BEE-HIVE', 'objects', 'amber', 'A little house where bees live and make honey.'),
+  w('BEET-ROOT', 'food', 'pink', 'A dark red vegetable that turns your fingers pink.'),
+  w('BELL', 'music', 'amber', 'Shake it and it goes ding-a-ling.'),
+  w('BENCH', 'objects', 'brown', 'A long seat in the park.'),
+  w('BIKE', 'vehicles', 'blue', 'It has two wheels, pedals and a bell.'),
+  w('BI-NOC-U-LARS', 'objects', 'slate', 'Look through them to see far-away things up close.'),
+  w('BI-SON', 'animals', 'brown', 'A huge, shaggy wild cow with horns.'),
+  w('BLUE-BER-RIES', 'food', 'indigo', 'Tiny dark blue berries.'),
+  w('BOAR', 'animals', 'brown', 'A wild, hairy pig that lives in the forest.'),
+  w('BOAT', 'vehicles', 'brown', 'You row it across the lake with oars.'),
+  w('BOLT', 'tools', 'teal', 'A metal rod with a thread that a nut screws onto.'),
+  w('BONE', 'objects', 'amber', 'Every dog\'s favourite treat.'),
+  w('BOOTS', 'objects', 'brown', 'You pull them on your feet before going out in the mud.'),
+  w('BRANCH', 'nature', 'lime', 'It grows out of a tree trunk and holds the leaves.'),
+  w('BREAD', 'food', 'amber', 'You slice it and make sandwiches with it.'),
+  w('BRICK', 'objects', 'orange', 'A red block for building houses.'),
+  w('BUS', 'vehicles', 'lime', 'A long vehicle that carries lots of people around town.'),
+  w('BUT-TER-FLY', 'animals', 'orange', 'An insect with colourful wings that visits flowers.'),
+  w('BUT-TON', 'objects', 'brown', 'A small round thing with holes for doing up clothes.'),
+  w('CAMP-FIRE', 'nature', 'orange', 'A fire outdoors where you can toast marshmallows.'),
+  w('CAN-DLE', 'objects', 'yellow', 'It burns with a small flame and gives light.'),
+  w('CAN-NON', 'objects', 'slate', 'A big tube on wheels that fires heavy balls. Boom!'),
+  w('CAR', 'vehicles', 'blue', 'It has four wheels, a steering wheel and an engine.'),
+  w('CAR-ROT', 'food', 'orange', 'An orange vegetable that rabbits love.'),
+  w('CAS-TLE', 'places', 'blue', 'A big building with towers where a king lives.'),
+  w('CAT', 'animals', 'slate', 'It purrs, miaows and chases mice.'),
+  w('CHEESE', 'food', 'yellow', 'Yellow, with holes, and made from milk.'),
+  w('CHIPS', 'food', 'yellow', 'Hot, crunchy sticks of fried potato.'),
+  w('CHOC-O-LATE', 'food', 'brown', 'A sweet brown bar made from cocoa.'),
+  w('CIR-CUS', 'places', 'red', 'A big striped tent with clowns and acrobats.'),
+  w('COIN', 'objects', 'amber', 'A round piece of money.'),
+  w('COM-PASS-ES', 'school', 'slate', 'You use it to draw perfect circles.'),
+  w('COW', 'animals', 'slate', 'It says moo and gives us milk.'),
+  w('CRANE', 'vehicles', 'yellow', 'A tall machine that lifts heavy things on a building site.'),
+  w('CROIS-SANT', 'food', 'amber', 'A flaky, curved pastry shaped like the moon.'),
+  w('CU-CUM-BER', 'food', 'green', 'A long green vegetable, nice in a sandwich.'),
+  w('DECK-CHAIR', 'objects', 'blue', 'A folding chair for relaxing on the beach.'),
+  w('DEER', 'animals', 'brown', 'A forest animal with big branching antlers.'),
+  w('DI-A-RY', 'school', 'blue', 'A book where you write what happened each day.'),
+  w('DI-NO-SAUR', 'animals', 'lime', 'A huge animal that lived a very, very long time ago.'),
+  w('DOG', 'animals', 'amber', 'It barks, wags its tail and is our best friend.'),
+  w('DOL-PHIN', 'animals', 'sky', 'A clever sea animal that leaps over the waves.'),
+  w('DOUGH-NUT', 'food', 'amber', 'A round sweet bun with jam inside.'),
+  w('DRAW-ER', 'objects', 'brown', 'It slides out of a cupboard and you keep things in it.'),
+  w('DRILL', 'tools', 'green', 'A tool that makes holes in the wall.'),
+  w('DUCK', 'animals', 'green', 'A bird that swims on the pond and says quack.'),
+  w('EGG', 'food', 'orange', 'A hen lays it, and it has a yellow yolk inside.'),
+  w('EIGHT', 'objects', 'sky', 'The number that looks like two circles, one on top of the other.'),
+  w('E-LEC-TRI-CIAN', 'people', 'blue', 'Someone who fixes plugs, wires and lights.'),
+  w('EL-E-PHANT', 'animals', 'slate', 'A giant with a long trunk and huge ears.'),
+  w('EN-VE-LOPE', 'objects', 'red', 'You put a letter in it and post it.'),
+  w('EYES', 'body', 'blue', 'You have two and you see with them.'),
+  w('FEATH-ER', 'nature', 'teal', 'Light and soft, a bird dropped it.'),
+  w('FIGS', 'food', 'purple', 'Sweet purple fruits full of tiny seeds.'),
+  w('FISH', 'animals', 'teal', 'It swims in water and has fins and scales.'),
+  w('FLOUR', 'food', 'amber', 'White powder for baking bread and cakes.'),
+  w('FOAL', 'animals', 'brown', 'A baby horse.'),
+  w('FORK', 'objects', 'purple', 'It has prongs for picking up food.'),
+  w('FROG', 'animals', 'green', 'It is green, hops and croaks by the pond.'),
+  w('GE-NIE', 'people', 'purple', 'It pops out of a lamp and grants three wishes.'),
+  w('GIN-GER', 'food', 'amber', 'A spicy root that goes in biscuits and tea.'),
+  w('GI-RAFFE', 'animals', 'amber', 'The tallest animal, with a very long neck.'),
+  w('GLASS-ES', 'objects', 'sky', 'You wear them on your nose to see better.'),
+  w('GLOBE', 'school', 'sky', 'A round map of the whole Earth that spins.'),
+  w('GOOSE', 'animals', 'amber', 'A big bird with a long neck that honks loudly.'),
+  w('GO-RIL-LA', 'animals', 'slate', 'The biggest and strongest ape.'),
+  w('GRAN-DAD', 'people', 'teal', 'Your mum\'s or your dad\'s dad.'),
+  w('GUI-TAR', 'music', 'brown', 'You strum its strings with your fingers.'),
+  w('HAIR-DRY-ER', 'objects', 'orange', 'It blows warm air to dry wet hair.'),
+  w('HAM-MOCK', 'objects', 'red', 'It hangs between two trees and you swing in it.'),
+  w('HAM-STER', 'animals', 'orange', 'A small furry pet that stuffs food in its cheeks.'),
+  w('HAND', 'body', 'orange', 'It has five fingers, and you have two.'),
+  w('HARE', 'animals', 'amber', 'It has long ears and races across the fields.'),
+  w('HAT', 'objects', 'teal', 'A woolly one keeps your head warm.'),
+  w('HEDGE-HOG', 'animals', 'brown', 'A small animal with prickles on its back.'),
+  w('HEL-I-COP-TER', 'vehicles', 'red', 'It flies with big spinning blades on top.'),
+  w('HEL-MET', 'objects', 'red', 'A hard hat that protects your head.'),
+  w('HIP-PO', 'animals', 'purple', 'A huge, heavy animal that loves wallowing in water.'),
+  w('HOOK', 'tools', 'yellow', 'A bent piece of metal for hanging and lifting.'),
+  w('HORSE', 'animals', 'brown', 'It has a mane and hooves, neighs and gallops.'),
+  w('HOUSE', 'places', 'red', 'We live in it with our family.'),
+  w('IG-LOO', 'places', 'sky', 'A little house built from blocks of snow.'),
+  w('JAM', 'food', 'red', 'Sweet fruit in a jar for spreading on toast.'),
+  w('JOCK-EY', 'people', 'purple', 'A rider who races horses.'),
+  w('KET-TLE', 'objects', 'red', 'It boils water for a cup of tea.'),
+  w('LAD-DER', 'tools', 'brown', 'It has rungs you climb to get up high.'),
+  w('LAMP', 'objects', 'yellow', 'It lights up the room when it gets dark.'),
+  w('LEAF', 'nature', 'orange', 'It grows on a branch and falls off in autumn.'),
+  w('LEG', 'body', 'brown', 'You have two, for walking, running and jumping.'),
+  w('LEM-ON', 'food', 'yellow', 'A very sour yellow fruit.'),
+  w('LIPS', 'body', 'red', 'You smile and blow kisses with them.'),
+  w('MAP', 'school', 'amber', 'A drawing that shows roads, towns and countries.'),
+  w('MI-CRO-PHONE', 'music', 'pink', 'You sing or talk into it to sound louder.'),
+  w('MON-EY', 'objects', 'green', 'Notes and coins you pay with in a shop.'),
+  w('MOOSE', 'animals', 'brown', 'A huge forest animal with wide, flat antlers.'),
+  w('MOTH', 'animals', 'orange', 'It flies at night and loves bright lights.'),
+  w('MOUN-TAIN', 'nature', 'slate', 'Very high and rocky, often with snow on top.'),
+  w('MOUSE', 'animals', 'brown', 'A small animal with a long tail that is scared of cats.'),
+  w('MUSH-ROOM', 'nature', 'red', 'It grows in the forest and has a stalk and a cap.'),
+  w('NAILS', 'tools', 'slate', 'You bang them into wood with a hammer.'),
+  w('NEE-DLE', 'objects', 'pink', 'Thin and sharp, with a hole for thread, for sewing.'),
+  w('NET', 'objects', 'amber', 'Fishermen catch fish with it.'),
+  w('NOTE-BOOK', 'school', 'slate', 'A little book for writing important things down.'),
+  w('OL-IVES', 'food', 'lime', 'Small green and black fruits that make oil.'),
+  w('ON-ION', 'food', 'orange', 'Cutting this vegetable makes you cry.'),
+  w('PEAR', 'food', 'lime', 'A juicy fruit, thin at the top and round at the bottom.'),
+  w('PHONE', 'objects', 'slate', 'It rings and you say: hello!'),
+  w('PINE-AP-PLE', 'food', 'yellow', 'A sweet fruit with prickly skin and a spiky green top.'),
+  w('PIZ-ZA', 'food', 'red', 'A round flat bread with cheese and tomato on top.'),
+  w('PLAS-TER', 'objects', 'orange', 'You stick it on a cut.'),
+  w('PLATE', 'objects', 'blue', 'You put your dinner on it.'),
+  w('POT', 'objects', 'slate', 'You cook soup in it.'),
+  w('PUMP', 'tools', 'red', 'You blow up bike tyres with it.'),
+  w('RA-DI-O', 'music', 'brown', 'It plays music and tells the news.'),
+  w('RASP-BER-RIES', 'food', 'pink', 'Soft red berries that grow on bushes.'),
+  w('RI-DER', 'people', 'green', 'A person riding a horse.'),
+  w('RIV-ER', 'nature', 'sky', 'Water that flows through fields and towns to the sea.'),
+  w('ROB-BER', 'people', 'slate', 'Someone who takes other people\'s things and runs off with a sack.'),
+  w('RO-BOT', 'objects', 'slate', 'A machine that can move like a person.'),
+  w('ROCK-ET', 'vehicles', 'red', 'It blasts off into space, up to the stars.'),
+  w('SCIS-SORS', 'school', 'pink', 'You cut paper with them.'),
+  w('SCOO-TER', 'vehicles', 'blue', 'Stand on it with one foot and push with the other.'),
+  w('SCREEN', 'objects', 'slate', 'The computer shows its pictures on this.'),
+  w('SEAL', 'animals', 'slate', 'A sea animal with flippers that likes lying on rocks.'),
+  w('SHARK', 'animals', 'slate', 'A big sea fish with sharp teeth.'),
+  w('SHED', 'places', 'brown', 'A little wooden hut for tools in the garden.'),
+  w('SHELL', 'nature', 'amber', 'You find it on the beach. Hold it to your ear!'),
+  w('SINK', 'objects', 'sky', 'You wash your hands and brush your teeth over it.'),
+  w('SKATE', 'objects', 'sky', 'A boot with a blade for gliding on ice.'),
+  w('SKATE-BOARD', 'objects', 'orange', 'A board on four wheels for rolling and jumping.'),
+  w('SKIS', 'objects', 'sky', 'Two long boards for sliding down snowy hills.'),
+  w('SLEDGE', 'objects', 'brown', 'You whizz down snowy hills on it.'),
+  w('SLIDE', 'objects', 'red', 'Climb the steps and whoosh down in the playground.'),
+  w('SNOW-MAN', 'objects', 'sky', 'Made of snow, with a carrot for a nose.'),
+  w('SOCKS', 'objects', 'blue', 'You put them on your feet before your shoes.'),
+  w('SPADE', 'tools', 'brown', 'You dig holes in the ground with it.'),
+  w('SPAR-ROW', 'animals', 'brown', 'A small brown bird that chirps.'),
+  w('SPIN-ACH', 'food', 'green', 'Green leaves full of vitamins.'),
+  w('STREET', 'places', 'slate', 'A road in town where cars drive.'),
+  w('STUMP', 'nature', 'brown', 'What is left in the ground when a tree is cut down.'),
+  w('SUIT-CASE', 'objects', 'teal', 'You pack your clothes in it to go on holiday.'),
+  w('SUN', 'nature', 'yellow', 'It shines in the sky and keeps us warm.'),
+  w('SWAL-LOW', 'animals', 'indigo', 'A bird with a forked tail that nests under roofs.'),
+  w('SWAN', 'animals', 'sky', 'A big white bird with a long curved neck.'),
+  w('SWEET', 'food', 'pink', 'A little treat wrapped in shiny paper.'),
+  w('SWING', 'objects', 'brown', 'You go back and forth on it in the playground.'),
+  w('TENT', 'places', 'green', 'A house made of cloth that you sleep in when camping.'),
+  w('THREAD', 'objects', 'blue', 'Long and thin, wound on a reel, for sewing.'),
+  w('TI-GER', 'animals', 'orange', 'A big wild cat with black stripes.'),
+  w('TOR-TOISE', 'animals', 'green', 'A slow animal that carries its house on its back.'),
+  w('TRAC-TOR', 'vehicles', 'red', 'A strong vehicle with big wheels that works on the farm.'),
+  w('TREE', 'nature', 'green', 'It has a trunk, branches and lots of leaves.'),
+  w('TU-LIP', 'nature', 'red', 'A spring flower shaped like a cup.'),
+  w('TUR-KEY', 'animals', 'brown', 'A big bird with a red wattle and a tail like a fan.'),
+  w('U-FO', 'vehicles', 'indigo', 'A flying saucer from outer space.'),
+  w('UM-BREL-LA', 'objects', 'blue', 'You open it to keep the rain off.'),
+  w('VAC-UUM', 'objects', 'red', 'A noisy machine that sucks dust off the floor.'),
+  w('VOL-CA-NO', 'nature', 'red', 'A mountain that pours out hot lava.'),
+  w('WATCH', 'objects', 'indigo', 'You wear it on your wrist to tell the time.'),
+  w('WA-TER-MEL-ON', 'food', 'green', 'A huge fruit, green outside and red and juicy inside.'),
+  w('WHEEL-BAR-ROW', 'tools', 'brown', 'A cart with one wheel for carrying soil.'),
+  w('WIN-DOW', 'objects', 'brown', 'Light comes into the room through it.'),
+  w('WOLF', 'animals', 'slate', 'A wild animal that howls at the moon.'),
+  w('YACHT', 'vehicles', 'sky', 'A boat with a sail that the wind pushes along.'),
+  w('ZE-BRA', 'animals', 'slate', 'It looks like a horse with black and white stripes.')
 ];
 
 /**
@@ -353,9 +338,9 @@ export const shuffledByTier = (words, tierOf) => {
   return keyed.map((entry) => entry.word);
 };
 
-// Every letter of the Polish alphabet. The accented ones used to be missing,
-// so any Ł or Ż on the board was certain to belong in the word.
-const SCRAMBLE_LETTERS = Array.from('AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŹŻ');
+// Every letter of the alphabet, so no letter on the board is certain to belong
+// in the word just because it is unusual.
+const SCRAMBLE_LETTERS = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
 const shuffleCopy = (list) => {
   const out = [...list];
@@ -368,7 +353,7 @@ const shuffleCopy = (list) => {
 
 /**
  * Generates scrambled letter tiles for a word with exact extra distractor letters.
- * @param {string} word - Target word (e.g. "KOT")
+ * @param {string} word - Target word (e.g. "CAT")
  * @param {number} extraCount - Number of distractor letters
  * @returns {Array<{id: string, char: string, isExtra: boolean}>}
  */

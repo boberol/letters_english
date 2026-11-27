@@ -19,9 +19,9 @@ import RunSettings from './RunSettings';
 const ALL_NUMBERS = Array.from({ length: 21 }, (_, i) => i);
 
 const NUMBER_WORDS = [
-  'zero', 'jeden', 'dwa', 'trzy', 'cztery', 'pięć', 'sześć', 'siedem', 'osiem', 'dziewięć',
-  'dziesięć', 'jedenaście', 'dwanaście', 'trzynaście', 'czternaście', 'piętnaście',
-  'szesnaście', 'siedemnaście', 'osiemnaście', 'dziewiętnaście', 'dwadzieścia'
+  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+  'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+  'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'
 ];
 
 const NUMBER_PRESETS = [
@@ -296,7 +296,7 @@ export default function NumbersTool({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color={active.col.text} size={28} aria-hidden="true" />
         </button>
@@ -304,7 +304,7 @@ export default function NumbersTool({ onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🔢</span>
           <span className="stage-title" style={{ color: active.col.text }}>
-            Kolorowe Liczby
+            Colourful Numbers
           </span>
         </div>
 
@@ -314,8 +314,8 @@ export default function NumbersTool({ onBack }) {
             sounds.playClick();
             setShowSettings(true);
           }}
-          title="Ustawienia liczb i kolorów"
-          aria-label="Ustawienia liczb i kolorów"
+          title="Number and colour settings"
+          aria-label="Number and colour settings"
         >
           <Sliders size={20} color="#334155" aria-hidden="true" />
         </button>
@@ -323,13 +323,13 @@ export default function NumbersTool({ onBack }) {
 
       <div className="shapes-mode-tabs glass-panel">
         <button className={`shapes-tab-btn ${toolMode === 'card' ? 'active' : ''}`} onClick={() => switchMode('card')}>
-          <Square size={16} /> Duża Liczba
+          <Square size={16} /> Big Number
         </button>
         <button className={`shapes-tab-btn ${toolMode === 'grid' ? 'active' : ''}`} onClick={() => switchMode('grid')}>
-          <Grid size={16} /> Siatka
+          <Grid size={16} /> Grid
         </button>
         <button className={`shapes-tab-btn ${toolMode === 'quiz' ? 'active' : ''}`} onClick={() => switchMode('quiz')}>
-          <HelpCircle size={16} /> Ile kropek?
+          <HelpCircle size={16} /> How many dots?
         </button>
       </div>
 
@@ -359,10 +359,10 @@ export default function NumbersTool({ onBack }) {
                 rollNew(true);
               }}
               disabled={countdown.running}
-              title="Losuj kolejną (Spacja)"
+              title="Next one (Space)"
             >
               <Shuffle size={18} style={{ marginRight: '6px' }} />
-              Losuj kolejną
+              Next one
             </button>
             <button
               className={`action-btn ${autoRunning ? 'btn-clear' : 'btn-replay'}`}
@@ -374,11 +374,11 @@ export default function NumbersTool({ onBack }) {
             >
               {autoRunning ? (
                 <>
-                  <Pause size={18} style={{ marginRight: '6px' }} /> Zatrzymaj
+                  <Pause size={18} style={{ marginRight: '6px' }} /> Stop
                 </>
               ) : (
                 <>
-                  <Play size={18} style={{ marginRight: '6px' }} /> Auto-slajdy
+                  <Play size={18} style={{ marginRight: '6px' }} /> Auto-slides
                 </>
               )}
             </button>
@@ -389,7 +389,7 @@ export default function NumbersTool({ onBack }) {
       {toolMode === 'grid' && (
         <div className="arrow-grid-view">
           <div className="grid-size-selector glass-panel">
-            <span>Rozmiar siatki:</span>
+            <span>Grid size:</span>
             {GRID_SIZES.map((sz) => (
               <button
                 key={sz}
@@ -427,9 +427,9 @@ export default function NumbersTool({ onBack }) {
             ))}
           </div>
 
-          <button className="action-btn btn-random-shape" onClick={rollNewGrid} title="Generuj nową planszę (Spacja)">
+          <button className="action-btn btn-random-shape" onClick={rollNewGrid} title="New board (Space)">
             <Shuffle size={18} style={{ marginRight: '6px' }} />
-            Generuj nową planszę
+            New board
           </button>
         </div>
       )}
@@ -437,7 +437,7 @@ export default function NumbersTool({ onBack }) {
       {toolMode === 'quiz' && (
         <div className="arrow-quiz-view">
           <div className="quiz-score-badge glass-panel">
-            🎯 Punkty: <strong>{quizScore.correct}</strong> / {quizScore.total}
+            🎯 Points: <strong>{quizScore.correct}</strong> / {quizScore.total}
           </div>
 
           {/* The dots take as many rows as the biggest number that can come
@@ -452,9 +452,9 @@ export default function NumbersTool({ onBack }) {
           >
             <div key={active.roll} className={`card-pop ${active.repeat ? 'is-repeat' : ''}`}>
               <Dots count={active.num} color={active.col.color} />
-              {active.num === 0 && <span className="number-zero-hint">pusto</span>}
+              {active.num === 0 && <span className="number-zero-hint">empty</span>}
             </div>
-            <h3 className="quiz-instruction">Ile jest kropek?</h3>
+            <h3 className="quiz-instruction">How many dots are there?</h3>
           </div>
 
           <div className="quiz-options-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', maxWidth: '380px' }}>
@@ -475,9 +475,9 @@ export default function NumbersTool({ onBack }) {
               not grow the screen by a row. */}
           <div className="quiz-feedback-slot" aria-live="polite">
             {quizFeedback === 'correct' && (
-              <div className="quiz-feedback-toast correct">🎉 Brawo! To jest {NUMBER_WORDS[active.num]}!</div>
+              <div className="quiz-feedback-toast correct">🎉 Well done! It's {NUMBER_WORDS[active.num]}!</div>
             )}
-            {quizFeedback === 'wrong' && <div className="quiz-feedback-toast wrong">❌ Ups! Policz jeszcze raz!</div>}
+            {quizFeedback === 'wrong' && <div className="quiz-feedback-toast wrong">❌ Oops! Count again!</div>}
           </div>
         </div>
       )}
@@ -485,9 +485,9 @@ export default function NumbersTool({ onBack }) {
       <Countdown count={countdown.count} color={active.col.color} />
 
       {showSettings && (
-        <SettingsModal title="Ustawienia liczb" doneLabel="Zastosuj i zamknij" onClose={() => setShowSettings(false)}>
+        <SettingsModal title="Number settings" doneLabel="Apply and close" onClose={() => setShowSettings(false)}>
           <div className="settings-section">
-            <h3>1. Które liczby ({activeNumbers.length} aktywnych):</h3>
+            <h3>1. Which numbers ({activeNumbers.length} on):</h3>
             <div className="settings-quick-actions">
               {NUMBER_PRESETS.map((p) => (
                 <button
@@ -522,7 +522,7 @@ export default function NumbersTool({ onBack }) {
 
           <div className="settings-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>2. Kolory ({selectedColorIds.length} aktywnych):</h3>
+              <h3>2. Colours ({selectedColorIds.length} on):</h3>
               <button
                 className="text-link-btn"
                 onClick={() => {
@@ -530,7 +530,7 @@ export default function NumbersTool({ onBack }) {
                   setSelectedColorIds(ALL_COLORS.map((c) => c.id));
                 }}
               >
-                Wszystkie
+                All
               </button>
             </div>
             <div className="colors-selection-grid">
@@ -557,8 +557,8 @@ export default function NumbersTool({ onBack }) {
           </div>
 
           <RunSettings
-            title="3. Auto-slajdy - ile liczb:"
-            unit="liczbach"
+            title="3. Auto-slides - how many numbers:"
+            unit="numbers"
             repetitions={repetitions}
             onRepetitions={setRepetitions}
             countdown={useCountdownSetting}
@@ -566,11 +566,11 @@ export default function NumbersTool({ onBack }) {
           />
 
           <div className="settings-section">
-            <h3>4. Opcje wyświetlania:</h3>
+            <h3>4. Display options:</h3>
             <div className="settings-options-list">
               <label className="settings-checkbox-label">
                 <input type="checkbox" checked={showDots} onChange={(e) => setShowDots(e.target.checked)} />
-                <span>Pokazuj kropki pod liczbą</span>
+                <span>Show dots under the number</span>
               </label>
             </div>
           </div>
