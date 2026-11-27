@@ -13,7 +13,7 @@ export default function StarBadge({ count = 0, total = MAX_STARS, size = 'sm' })
     <span
       className={`star-badge star-badge-${size}`}
       role="img"
-      aria-label={`${earned} z ${total} gwiazdek`}
+      aria-label={`${earned} of ${total} stars`}
     >
       {Array.from({ length: total }, (_, i) => (
         <span key={i} className={`star-badge-star ${i < earned ? 'earned' : 'empty'}`} aria-hidden="true">

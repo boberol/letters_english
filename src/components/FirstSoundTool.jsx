@@ -20,9 +20,9 @@ import Picture from './Picture';
 // The easiest setting has three answers, not two: with two, half of all
 // answers were a coin toss.
 const LEVELS = {
-  easy: { id: 'easy', label: '🟢 Łatwy', choices: 3, digraphs: false },
-  medium: { id: 'medium', label: '🟡 Średni', choices: 4, digraphs: false },
-  hard: { id: 'hard', label: '🔴 Trudny', choices: 4, digraphs: true, hardWords: true }
+  easy: { id: 'easy', label: '🟢 Easy', choices: 3, digraphs: false },
+  medium: { id: 'medium', label: '🟡 Medium', choices: 4, digraphs: false },
+  hard: { id: 'hard', label: '🔴 Hard', choices: 4, digraphs: true, hardWords: true }
 };
 
 const STORAGE_KEY = 'letter_app_firstsound_diff';
@@ -34,9 +34,9 @@ const POSITION_KEY = 'letter_app_firstsound_position';
 // a word's last letter is not always the sound heard there ("chleb" ends on a
 // B but sounds like P), and a random one is shown in its place in the word.
 const POSITIONS = {
-  first: { id: 'first', label: '⬅️ Pierwsza', title: 'Pierwsza głoska' },
-  last: { id: 'last', label: '➡️ Ostatnia', title: 'Ostatnia litera' },
-  random: { id: 'random', label: '🎲 Losowa', title: 'Ukryta litera' }
+  first: { id: 'first', label: '⬅️ First', title: 'First sound' },
+  last: { id: 'last', label: '➡️ Last', title: 'Last letter' },
+  random: { id: 'random', label: '🎲 Random', title: 'Hidden letter' }
 };
 
 // Two kinds of word are held back, and only when the round is about the first
@@ -174,19 +174,19 @@ const buildPictureRound = (level, previousId, position = 'first') => {
 // whole question. The answer names it afterwards.
 const QUESTIONS = {
   first: {
-    letter: 'Na jaką głoskę to się zaczyna?',
-    picture: 'Co zaczyna się na tę głoskę?',
-    done: (name, answer) => <><strong>{name}</strong> zaczyna się na <strong>{answer}</strong>.</>
+    letter: 'What sound does it start with?',
+    picture: 'What starts with this sound?',
+    done: (name, answer) => <><strong>{name}</strong> starts with <strong>{answer}</strong>.</>
   },
   last: {
-    letter: 'Na jaką literę to się kończy?',
-    picture: 'Co kończy się na tę literę?',
-    done: (name, answer) => <><strong>{name}</strong> kończy się na <strong>{answer}</strong>.</>
+    letter: 'What letter does it end with?',
+    picture: 'What ends with this letter?',
+    done: (name, answer) => <><strong>{name}</strong> ends with <strong>{answer}</strong>.</>
   },
   random: {
-    letter: 'Jakiej litery brakuje?',
-    picture: 'W czym jest ta litera?',
-    done: (name, answer) => <>W słowie <strong>{name}</strong> jest litera <strong>{answer}</strong>.</>
+    letter: 'Which letter is missing?',
+    picture: 'Which one has this letter?',
+    done: (name, answer) => <>The word <strong>{name}</strong> has the letter <strong>{answer}</strong>.</>
   }
 };
 
@@ -281,7 +281,7 @@ export default function FirstSoundTool({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color="#BE123C" size={28} />
         </button>
@@ -299,8 +299,8 @@ export default function FirstSoundTool({ onBack }) {
             sounds.playClick();
             setShowSettings(true);
           }}
-          title="Ustawienia"
-          aria-label="Ustawienia"
+          title="Settings"
+          aria-label="Settings"
         >
           <Sliders size={20} color="#334155" />
         </button>
@@ -311,13 +311,13 @@ export default function FirstSoundTool({ onBack }) {
           className={`shapes-tab-btn ${mode === 'letter' ? 'active' : ''}`}
           onClick={() => switchMode('letter')}
         >
-          <Type size={16} aria-hidden="true" /> Wybierz literę
+          <Type size={16} aria-hidden="true" /> Pick a letter
         </button>
         <button
           className={`shapes-tab-btn ${mode === 'picture' ? 'active' : ''}`}
           onClick={() => switchMode('picture')}
         >
-          <Repeat size={16} aria-hidden="true" /> Wybierz obrazek
+          <Repeat size={16} aria-hidden="true" /> Pick a picture
         </button>
       </div>
 
@@ -328,7 +328,7 @@ export default function FirstSoundTool({ onBack }) {
               className="sound-prompt-picture"
               style={{ borderColor: round.word.color }}
               role="img"
-              aria-label={showSuccess ? round.word.name : 'Obrazek'}
+              aria-label={showSuccess ? round.word.name : 'Picture'}
             >
               <Picture word={round.word.id} className="sound-prompt-emoji" size="100%" />
             </div>
@@ -359,7 +359,7 @@ export default function FirstSoundTool({ onBack }) {
                 className={`sound-letter-btn ${wrongKey === option ? 'wrong' : ''}`}
                 onClick={() => answerLetter(option)}
                 disabled={showSuccess}
-                aria-label={`Głoska ${option}`}
+                aria-label={`Sound ${option}`}
               >
                 {option}
               </button>
@@ -369,7 +369,7 @@ export default function FirstSoundTool({ onBack }) {
       ) : (
         <>
           <div className="sound-prompt glass-panel">
-            <div className="sound-prompt-letter" aria-label={`Głoska ${round.answer}`}>
+            <div className="sound-prompt-letter" aria-label={`Sound ${round.answer}`}>
               {round.answer}
             </div>
             <p className="sound-prompt-question">{question.picture}</p>
@@ -402,19 +402,19 @@ export default function FirstSoundTool({ onBack }) {
         }}
       >
         <Shuffle size={18} style={{ marginRight: '6px' }} />
-        Inne słowo
+        Another word
       </button>
 
       {showSuccess && (
-        <FeedbackModal color={round.word.color} title="Brawo!">
+        <FeedbackModal color={round.word.color} title="Well done!">
           {question.done(round.word.name, round.answer)}
         </FeedbackModal>
       )}
 
       {showSettings && (
-        <SettingsModal title="Ustawienia" onClose={() => setShowSettings(false)}>
+        <SettingsModal title="Settings" onClose={() => setShowSettings(false)}>
           <div className="settings-section">
-            <label className="settings-label">Która litera w słowie:</label>
+            <label className="settings-label">Which letter in the word:</label>
             <div className="settings-quick-actions">
               {Object.values(POSITIONS).map((option) => (
                 <button
@@ -427,13 +427,13 @@ export default function FirstSoundTool({ onBack }) {
               ))}
             </div>
             <p className="settings-hint-text">
-              Ostatnia - na jaką literę kończy się słowo. Losowa - za każdym razem inna litera,
-              pokazana na swoim miejscu w słowie.
+              Last - which letter the word ends with. Random - a different letter each time,
+              shown in its place in the word.
             </p>
           </div>
 
           <div className="settings-section">
-            <label className="settings-label">Ile odpowiedzi do wyboru:</label>
+            <label className="settings-label">How many answers to choose from:</label>
             <div className="settings-quick-actions">
               {Object.values(LEVELS).map((option) => (
                 <button
@@ -446,7 +446,7 @@ export default function FirstSoundTool({ onBack }) {
               ))}
             </div>
             <p className="settings-hint-text">
-              Na trudnym poziomie dochodzą słowa zaczynające się od dwóch liter, np. CHleb i SZopa.
+              On Hard, words that start with two letters join in, like SHip and CHair.
             </p>
           </div>
         </SettingsModal>

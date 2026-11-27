@@ -10,10 +10,10 @@ import { loadChoice, saveChoice, loadSetting, saveSetting } from '../utils/stora
 
 // Word length is the difficulty. The bands are what the settings offer.
 const LENGTHS = {
-  all: { id: 'all', label: 'Wszystkie', fits: () => true },
-  short: { id: 'short', label: '🟢 Krótkie (2-4 litery)', fits: (w) => w.length <= 4 },
-  medium: { id: 'medium', label: '🟡 Średnie (5-6 liter)', fits: (w) => w.length >= 5 && w.length <= 6 },
-  long: { id: 'long', label: '🔴 Długie (7 i więcej)', fits: (w) => w.length >= 7 }
+  all: { id: 'all', label: 'All', fits: () => true },
+  short: { id: 'short', label: '🟢 Short (2-4 letters)', fits: (w) => w.length <= 4 },
+  medium: { id: 'medium', label: '🟡 Medium (5-6 letters)', fits: (w) => w.length >= 5 && w.length <= 6 },
+  long: { id: 'long', label: '🔴 Long (7 or more)', fits: (w) => w.length >= 7 }
 };
 
 const CAT_KEY = 'letter_app_scramble_cat';
@@ -124,7 +124,7 @@ export default function WordScrambleTool({ onBack }) {
     setPlacedTiles(newPlaced);
     setFeedback(null);
 
-    // Only celebrate on its own. A wrong word waits for "Sprawdź!", so the
+    // Only celebrate on its own. A wrong word waits for "Check!", so the
     // child gets a moment to look at what they built before being told.
     if (newPlaced.every(t => t !== null)) {
       const entered = newPlaced.map(t => t.char).join('');
@@ -294,7 +294,7 @@ export default function WordScrambleTool({ onBack }) {
         <button 
           className="back-btn" 
           onClick={() => { sounds.playClick(); onBack(); }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color={currentWord.color} size={28} aria-hidden="true" />
         </button>
@@ -302,15 +302,15 @@ export default function WordScrambleTool({ onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🔤</span>
           <span className="stage-title" style={{ color: currentWord.color }}>
-            Rozsypanka Literowa
+            Letter Jumble
           </span>
         </div>
 
         <button 
           className="settings-toggle-btn"
           onClick={() => { sounds.playClick(); setShowSettings(true); }}
-          title="Ustawienia słów"
-          aria-label="Ustawienia słów"
+          title="Word settings"
+          aria-label="Word settings"
         >
           <Sliders size={20} color="#334155" aria-hidden="true" />
         </button>
@@ -356,11 +356,11 @@ export default function WordScrambleTool({ onBack }) {
                 borderColor: tile ? currentWord.color : '#CBD5E1',
                 backgroundColor: tile ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)'
               }}
-              title={tile ? 'Kliknij, aby cofnąć literkę' : 'Puste pole na literkę'}
+              title={tile ? 'Tap to take the letter back' : 'Empty space for a letter'}
               aria-label={
                 tile
-                  ? `Pole ${idx + 1}: ${formatChar(tile.char)} — kliknij, aby cofnąć`
-                  : `Puste pole ${idx + 1}`
+                  ? `Space ${idx + 1}: ${formatChar(tile.char)} - tap to take it back`
+                  : `Empty space ${idx + 1}`
               }
             >
               {tile ? (
@@ -381,13 +381,13 @@ export default function WordScrambleTool({ onBack }) {
               buttons below it do not jump with every answer. */}
           <div className="scramble-message-row" aria-live="polite">
             {feedback === 'wrong' ? (
-              <div className="scramble-feedback-banner error">Jeszcze nie to 🤔 Spróbuj!</div>
+              <div className="scramble-feedback-banner error">Not quite 🤔 Try again!</div>
             ) : feedback === 'success' ? (
               <div className="scramble-feedback-banner success">
-                Brawo! 🌟 <strong>{formatChar(currentWord.word)}</strong>
+                Well done! 🌟 <strong>{formatChar(currentWord.word)}</strong>
               </div>
             ) : (
-              <div className="scramble-pool-title">Wybierz literki, aby ułożyć podpis:</div>
+              <div className="scramble-pool-title">Pick letters to spell the word:</div>
             )}
           </div>
 
@@ -400,7 +400,7 @@ export default function WordScrambleTool({ onBack }) {
                   className={`scramble-letter-tile ${isUsed ? 'used' : ''}`}
                   onClick={() => handleTileClick(tile)}
                   disabled={isUsed || feedback === 'success'}
-                  aria-label={`Litera ${formatChar(tile.char)}`}
+                  aria-label={`Letter ${formatChar(tile.char)}`}
                   style={{
                     color: isUsed ? '#94A3B8' : '#1E293B',
                     borderColor: isUsed ? 'transparent' : '#E2E8F0'
@@ -418,43 +418,43 @@ export default function WordScrambleTool({ onBack }) {
       {/* Bottom Action Controls: only the two a child needs mid-task are given
           full-size buttons; navigation and undo stay small and quiet. */}
       <div className="shapes-controls">
-        <button className="action-btn btn-secondary-round" onClick={handlePrev} title="Poprzednie słowo (←)" aria-label="Poprzednie słowo">
+        <button className="action-btn btn-secondary-round" onClick={handlePrev} title="Previous word (←)" aria-label="Previous word">
           ◀
         </button>
 
-        <button className="action-btn btn-hint" onClick={handleHint} disabled={feedback === 'success'} title="Podpowiedź litery" aria-label="Podpowiedź">
+        <button className="action-btn btn-hint" onClick={handleHint} disabled={feedback === 'success'} title="Letter hint" aria-label="Hint">
           <Lightbulb size={18} style={{ marginRight: '6px' }} />
-          <span className="btn-label-optional">Podpowiedź</span>
+          <span className="btn-label-optional">Hint</span>
         </button>
 
-        <button className="action-btn btn-check" onClick={() => validateWord()} title="Sprawdź słowo (Enter)">
+        <button className="action-btn btn-check" onClick={() => validateWord()} title="Check the word (Enter)">
           <Check size={18} style={{ marginRight: '6px' }} />
-          Sprawdź!
+          Check!
         </button>
 
-        <button className="action-btn btn-secondary-round" onClick={handleNext} title="Następne słowo (→)" aria-label="Następne słowo">
+        <button className="action-btn btn-secondary-round" onClick={handleNext} title="Next word (→)" aria-label="Next word">
           ▶
         </button>
       </div>
 
       {/* Word Tracker Pill */}
       <div className="shape-tracker-pill">
-        Słowo {safeIdx + 1} z {activeWords.length}
+        Word {safeIdx + 1} of {activeWords.length}
       </div>
 
       {showSettings && (
         <SettingsModal
-          title="Ustawienia słów"
-          doneLabel="Zapisz i graj"
+          title="Word settings"
+          doneLabel="Save and play"
           onClose={() => setShowSettings(false)}
           summary={
             <>
-              Dostępnych słów w puli: <strong>{activeWords.length}</strong>
+              Words in the pool: <strong>{activeWords.length}</strong>
             </>
           }
         >
           <div className="settings-section">
-            <span className="settings-label">Kategoria słów:</span>
+            <span className="settings-label">Word category:</span>
             <div className="settings-quick-actions">
               {wordsCategories.map(cat => (
                 <button
@@ -474,7 +474,7 @@ export default function WordScrambleTool({ onBack }) {
           </div>
 
           <div className="settings-section">
-            <span className="settings-label">Długość słów (poziom trudności):</span>
+            <span className="settings-label">Word length (difficulty):</span>
             <div className="settings-quick-actions">
               {Object.values(LENGTHS).map((option) => (
                 <button
@@ -490,54 +490,54 @@ export default function WordScrambleTool({ onBack }) {
           </div>
 
           <div className="settings-section">
-            <span className="settings-label">Liczba dodatkowych liter zmyłkowych:</span>
+            <span className="settings-label">Number of extra decoy letters:</span>
             <div className="settings-quick-actions">
                 <button
                   className={`quick-chip-btn ${extraLettersCount === 1 ? 'active' : ''}`}
                   aria-pressed={extraLettersCount === 1}
                   onClick={() => { sounds.playClick(); setExtraLettersCount(1); }}
                 >
-                  +1 litera
+                  +1 letter
                 </button>
                 <button
                   className={`quick-chip-btn ${extraLettersCount === 2 ? 'active' : ''}`}
                   aria-pressed={extraLettersCount === 2}
                   onClick={() => { sounds.playClick(); setExtraLettersCount(2); }}
                 >
-                  +2 litery (Domyślnie) ⭐
+                  +2 letters (Default) ⭐
                 </button>
                 <button
                   className={`quick-chip-btn ${extraLettersCount === 3 ? 'active' : ''}`}
                   aria-pressed={extraLettersCount === 3}
                   onClick={() => { sounds.playClick(); setExtraLettersCount(3); }}
                 >
-                  +3 litery (Trudniejszy)
+                  +3 letters (Harder)
                 </button>
             </div>
           </div>
 
           <div className="settings-section">
-            <span className="settings-label">Wielkość liter na kafelkach:</span>
+            <span className="settings-label">Letters on the tiles:</span>
             <div className="settings-quick-actions">
                 <button
                   className={`quick-chip-btn ${letterCase === 'upper' ? 'active' : ''}`}
                   aria-pressed={letterCase === 'upper'}
                   onClick={() => { sounds.playClick(); setLetterCase('upper'); }}
                 >
-                  🔤 DRUKOWANE (K O T)
+                  🔤 CAPITALS (C A T)
                 </button>
                 <button
                   className={`quick-chip-btn ${letterCase === 'lower' ? 'active' : ''}`}
                   aria-pressed={letterCase === 'lower'}
                   onClick={() => { sounds.playClick(); setLetterCase('lower'); }}
                 >
-                  🔡 małe (k o t)
+                  🔡 small (c a t)
                 </button>
             </div>
           </div>
 
           <div className="settings-section">
-            <span className="settings-label">Dodatkowe ułatwienia:</span>
+            <span className="settings-label">Extra help:</span>
             <div className="settings-toggle-row">
               <label className="settings-checkbox-label">
                 <input
@@ -548,7 +548,7 @@ export default function WordScrambleTool({ onBack }) {
                     setShowHintText(e.target.checked);
                   }}
                 />
-                <span>Pokazuj wierszyk-zagadkę (podpowiedź tekstową)</span>
+                <span>Show the riddle (a text hint)</span>
               </label>
             </div>
           </div>

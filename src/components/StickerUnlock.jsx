@@ -62,7 +62,7 @@ export default function StickerUnlock({ onOpenBook }) {
   return (
     <FeedbackModal
       color="#B45309"
-      title="Nowa naklejka!"
+      title="New sticker!"
       onDismiss={dismiss}
       actions={
         <>
@@ -79,7 +79,7 @@ export default function StickerUnlock({ onOpenBook }) {
               onOpenBook?.();
             }}
           >
-            Przyklej!
+            Stick it!
           </button>
         </>
       }

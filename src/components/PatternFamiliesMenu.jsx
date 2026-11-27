@@ -25,7 +25,7 @@ export default function PatternFamiliesMenu({ onSelectFamily, onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color="#0369A1" size={28} />
         </button>
@@ -33,7 +33,7 @@ export default function PatternFamiliesMenu({ onSelectFamily, onBack }) {
         <div className="tool-header-title-badge">
           <img className="shape-icon-badge shape-icon-img" src={szlaczkiIcon} alt="" width="256" height="256" draggable="false" />
           <span className="stage-title" style={{ color: '#0369A1' }}>
-            Wybierz rodzinę
+            Choose a family
           </span>
         </div>
 
@@ -89,7 +89,7 @@ export default function PatternFamiliesMenu({ onSelectFamily, onBack }) {
                 <span
                   className="family-progress-bar"
                   role="img"
-                  aria-label={`${earned} z ${max} gwiazdek`}
+                  aria-label={`${earned} of ${max} stars`}
                 >
                   <span
                     className="family-progress-fill"
@@ -98,7 +98,7 @@ export default function PatternFamiliesMenu({ onSelectFamily, onBack }) {
                 </span>
                 <span className="family-progress-text">
                   <img className="family-progress-star" src={starIcon} alt="" width="16" height="16" draggable="false" />
-                  {earned} / {max} · {done} z {patterns.length} szlaczków
+                  {earned} / {max} · {done} of {patterns.length} patterns
                 </span>
               </span>
             </button>

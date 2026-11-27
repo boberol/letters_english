@@ -48,7 +48,7 @@ const RING_TOLERANCE = { coverage: 0.42, stray: 0.45 };
 const OUTSIDE_SHARE = 0.1;
 
 // Lifting the finger only ends the exercise once this much of the pattern is
-// drawn. Pressing "Sprawdź!" uses the tolerance above, which is more forgiving.
+// drawn. Pressing "Check!" uses the tolerance above, which is more forgiving.
 const AUTO_ACCEPT_COVERAGE = 0.6;
 
 // A phone in either orientation. Its rows are cut to about half their width;
@@ -513,7 +513,7 @@ export default function PatternsTool({ familyId, onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru rodziny"
+          aria-label="Back to pattern families"
         >
           <ChevronLeft color={family.color} size={28} />
         </button>
@@ -537,7 +537,7 @@ export default function PatternsTool({ familyId, onBack }) {
             setMode('animation');
           }}
         >
-          <Play size={16} /> Animacja
+          <Play size={16} /> Watch
         </button>
         <button
           className={`shapes-tab-btn ${mode === 'guided' ? 'active' : ''}`}
@@ -546,13 +546,13 @@ export default function PatternsTool({ familyId, onBack }) {
             setMode('guided');
           }}
         >
-          <Edit3 size={16} /> Rysuj po śladzie
+          <Edit3 size={16} /> Trace it
         </button>
       </div>
 
       {/* The family's patterns in lesson order: rows first, the picture last.
           Small enough a list to show them all rather than hide a picker. */}
-      <div className="pattern-chip-row" role="tablist" aria-label={`Szlaczki: ${family.name}`}>
+      <div className="pattern-chip-row" role="tablist" aria-label={`Patterns: ${family.name}`}>
         {patterns.map((p, i) => (
           <button
             key={p.id}
@@ -664,11 +664,11 @@ export default function PatternsTool({ familyId, onBack }) {
         </svg>
 
         {showStartNudge && (
-          <div className="canvas-nudge-pill">Zacznij na kropce i rysuj po szarej linii ✏️</div>
+          <div className="canvas-nudge-pill">Start on the dot and draw along the grey line ✏️</div>
         )}
 
         {showRingHint && !showStartNudge && (
-          <div className="canvas-nudge-pill ring-hint">Brawo! Teraz większy 🎈</div>
+          <div className="canvas-nudge-pill ring-hint">Well done! Now a bigger one 🎈</div>
         )}
 
         <canvas
@@ -720,8 +720,8 @@ export default function PatternsTool({ familyId, onBack }) {
         <button
           className="action-btn btn-secondary-round"
           onClick={handlePrev}
-          title="Poprzedni szlaczek (←)"
-          aria-label="Poprzedni szlaczek"
+          title="Previous pattern (←)"
+          aria-label="Previous pattern"
         >
           ◀
         </button>
@@ -731,28 +731,28 @@ export default function PatternsTool({ familyId, onBack }) {
           active={mode === 'animation' ? 'animation' : 'guided'}
           options={{
             animation: (
-              <button className="action-btn btn-replay" onClick={handleReplay} title="Odtwórz animację (R)">
+              <button className="action-btn btn-replay" onClick={handleReplay} title="Replay animation (R)">
                 <RotateCcw size={18} style={{ marginRight: '6px' }} />
-                Odtwórz
+                Replay
               </button>
             ),
             guided: (
               <>
                 <button
                   className="action-btn btn-clear"
-                  aria-label="Wyczyść"
+                  aria-label="Clear"
                   onClick={() => {
                     sounds.playClick();
                     clearCanvas();
                   }}
-                  title="Wyczyść (C)"
+                  title="Clear (C)"
                 >
                   <Eraser size={18} style={{ marginRight: '6px' }} />
-                  <span className="btn-label-optional">Wyczyść</span>
+                  <span className="btn-label-optional">Clear</span>
                 </button>
-                <button className="action-btn btn-check" onClick={handleCheck} title="Sprawdź (Enter)">
+                <button className="action-btn btn-check" onClick={handleCheck} title="Check (Enter)">
                   <Check size={18} style={{ marginRight: '6px' }} />
-                  Sprawdź!
+                  Check!
                 </button>
               </>
             )
@@ -762,34 +762,34 @@ export default function PatternsTool({ familyId, onBack }) {
         <button
           className="action-btn btn-secondary-round"
           onClick={handleNext}
-          title="Następny szlaczek (→)"
-          aria-label="Następny szlaczek"
+          title="Next pattern (→)"
+          aria-label="Next pattern"
         >
           ▶
         </button>
       </div>
 
       {feedback === 'success' && (
-        <FeedbackModal peek color={family.color} title="Świetnie!" icon="🌟">
-          Cały szlaczek w liniach!
+        <FeedbackModal peek color={family.color} title="Brilliant!" icon="🌟">
+          The whole pattern in the lines!
         </FeedbackModal>
       )}
 
       {feedback === 'outside' && (
-        <FeedbackModal peek title="Prawie!" icon="💪">
-          Ta kreska uciekła za linię. Cofnęliśmy tylko ją - rysuj dalej!
+        <FeedbackModal peek title="Almost!" icon="💪">
+          That line ran outside. We only took that one back - keep drawing!
         </FeedbackModal>
       )}
 
       {feedback === 'reversed' && (
-        <FeedbackModal peek title="W drugą stronę!" icon="🔄">
-          Zacznij na kropce i rysuj tam, gdzie jedzie kolorowa kropka.
+        <FeedbackModal peek title="The other way!" icon="🔄">
+          Start on the dot and draw where the coloured dot goes.
         </FeedbackModal>
       )}
 
       {feedback === 'incomplete' && (
-        <FeedbackModal peek title="Prawie gotowe!" icon="✏️">
-          Dorysuj jeszcze resztę szlaczka.
+        <FeedbackModal peek title="Nearly there!" icon="✏️">
+          Now draw the rest of the pattern.
         </FeedbackModal>
       )}
     </div>

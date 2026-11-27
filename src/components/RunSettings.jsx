@@ -5,7 +5,7 @@ import { sounds } from '../utils/audio';
 // The two settings every self-running tool shares: how many before it stops,
 // and the 3-2-1 before it starts. Rendered inside a tool's settings modal.
 export default function RunSettings({
-  title = 'Powtórzenia:',
+  title = 'Repetitions:',
   unit = '',
   options = REPETITION_OPTIONS,
   repetitions,
@@ -25,19 +25,19 @@ export default function RunSettings({
               sounds.playClick();
               onRepetitions(count);
             }}
-            aria-label={count === 0 ? 'Bez końca' : `${count} ${unit}`.trim()}
+            aria-label={count === 0 ? 'Endless' : `${count} ${unit}`.trim()}
           >
             {repetitionLabel(count)}
           </button>
         ))}
       </div>
       <p className="settings-hint-text">
-        {repetitions === 0 ? 'Bez końca - aż do zatrzymania.' : `Zatrzyma się po ${repetitions} ${unit}.`.trim()}
+        {repetitions === 0 ? 'Endless - until you stop it.' : `Stops after ${repetitions} ${unit}.`.trim()}
       </p>
       <div className="settings-options-list">
         <label className="settings-checkbox-label">
           <input type="checkbox" checked={countdown} onChange={(e) => onCountdown(e.target.checked)} />
-          <span>Odliczanie 3, 2, 1 przed startem</span>
+          <span>Count down 3, 2, 1 before starting</span>
         </label>
       </div>
     </div>

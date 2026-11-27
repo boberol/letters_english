@@ -76,33 +76,33 @@ const spiral = (cx, cy, { rInner = 3, rOuter = 38, turns = 2.5, startAngle = -Ma
 export const patternFamilies = [
   {
     id: 'osa',
-    name: 'Rodzina osy',
-    shortName: 'Osa',
-    subtitle: 'Pętelki i kółeczka',
+    name: 'Wasp family',
+    shortName: 'Wasp',
+    subtitle: 'Loops and circles',
     color: '#B45309',
     bgColor: '#FEF3C7'
   },
   {
     id: 'zyrafa',
-    name: 'Rodzina żyrafy',
-    shortName: 'Żyrafa',
-    subtitle: 'Kąty i kwadraty',
+    name: 'Giraffe family',
+    shortName: 'Giraffe',
+    subtitle: 'Corners and squares',
     color: '#C2410C',
     bgColor: '#FFEDD5'
   },
   {
     id: 'delfin',
-    name: 'Rodzina delfina',
-    shortName: 'Delfin',
-    subtitle: 'Fale i serduszka',
+    name: 'Dolphin family',
+    shortName: 'Dolphin',
+    subtitle: 'Waves and hearts',
     color: '#0369A1',
     bgColor: '#E0F2FE'
   },
   {
     id: 'pajak',
-    name: 'Rodzina pająka',
-    shortName: 'Pająk',
-    subtitle: 'Zygzaki i iksy',
+    name: 'Spider family',
+    shortName: 'Spider',
+    subtitle: 'Zigzags and crosses',
     color: '#6D28D9',
     bgColor: '#F5F3FF'
   }
@@ -118,14 +118,14 @@ const FAMILY_PATTERNS = {
   osa: [
     {
       id: 'osa-petelki',
-      name: 'Pętelki',
+      name: 'Loops',
       icon: '➰',
       viewBox: ROW,
       strokes: traced('osa-petelki')
     },
     {
       id: 'osa-kolo-kreska',
-      name: 'Koło i kreska',
+      name: 'Circle and line',
       icon: '⭕',
       viewBox: ROW,
       strokes: [
@@ -140,15 +140,15 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'osa-slimak-lewo',
-      name: 'Ślimaki',
+      name: 'Snails',
       icon: '🐌',
       viewBox: ROW,
       strokes: [55, 150, 245].map((cx) => ({ path: spiral(cx, 50, { direction: -1 }) }))
     },
     {
       id: 'osa-kola',
-      name: 'Coraz większe koła',
-      short: 'Koła',
+      name: 'Bigger and bigger circles',
+      short: 'Circles',
       icon: '🎯',
       viewBox: FIGURE,
       // Three rings, not four: the guide band is 8 units wide, so rings any
@@ -158,7 +158,7 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'osa-osa',
-      name: 'Osa',
+      name: 'Wasp',
       icon: '🐝',
       // One journey: over the wasp's back, three loops for its striped body,
       // then back up to the point it started from.
@@ -170,7 +170,7 @@ const FAMILY_PATTERNS = {
   zyrafa: [
     {
       id: 'zyrafa-murek',
-      name: 'Murek',
+      name: 'Wall',
       icon: '🧱',
       viewBox: ROW,
       // From the top down, seven turns: down, along, up, along, twice over.
@@ -179,14 +179,14 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'zyrafa-kubeczki',
-      name: 'Kubeczki',
+      name: 'Cups',
       icon: '🥛',
       viewBox: ROW,
       strokes: [{ path: chain(22, 32, 'c 0,48 32,48 32,0', 8) }]
     },
     {
       id: 'zyrafa-plusiki',
-      name: 'Plusiki',
+      name: 'Pluses',
       icon: '➕',
       viewBox: ROW,
       // Arms stop well short of the next cross: at 18 they touched, and a row
@@ -198,8 +198,8 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'zyrafa-kwadraty',
-      name: 'Coraz większe kwadraty',
-      short: 'Kwadraty',
+      name: 'Bigger and bigger squares',
+      short: 'Squares',
       icon: '🔲',
       viewBox: FIGURE,
       progressive: true,
@@ -207,7 +207,7 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'zyrafa-puzzel',
-      name: 'Puzzel',
+      name: 'Puzzle',
       icon: '🧩',
       // Straight walls and square corners - the family's movement - with a
       // round tab for a head and two for legs.
@@ -219,29 +219,29 @@ const FAMILY_PATTERNS = {
   delfin: [
     {
       id: 'delfin-fale',
-      name: 'Fale',
+      name: 'Waves',
       icon: '🌊',
       viewBox: ROW,
       strokes: [{ path: chain(20, 72, 'c 0,-46 30,-46 30,0', 9) }]
     },
     {
       id: 'delfin-pletwy',
-      name: 'Płetwy',
+      name: 'Fins',
       icon: '🐟',
       viewBox: ROW,
       strokes: traced('delfin-pletwy')
     },
     {
       id: 'delfin-serduszka',
-      name: 'Serduszka',
+      name: 'Hearts',
       icon: '❤️',
       viewBox: ROW,
       strokes: traced('delfin-serduszka')
     },
     {
       id: 'delfin-owale',
-      name: 'Coraz większe owale',
-      short: 'Owale',
+      name: 'Bigger and bigger ovals',
+      short: 'Ovals',
       icon: '🥚',
       viewBox: FIGURE,
       progressive: true,
@@ -253,7 +253,7 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'delfin-kokardka',
-      name: 'Kokardka',
+      name: 'Bow',
       icon: '🎀',
       // Loops leaving from one point: the upper ones make the heart, the
       // lower ones the dolphin's tail.
@@ -265,21 +265,21 @@ const FAMILY_PATTERNS = {
   pajak: [
     {
       id: 'pajak-zygzak',
-      name: 'Zygzak',
+      name: 'Zigzag',
       icon: '⚡',
       viewBox: ROW,
       strokes: [{ path: chain(25, 30, 'l 20,45 l 20,-45', 6) }]
     },
     {
       id: 'pajak-zetki',
-      name: 'Zetki',
+      name: 'Zeds',
       icon: '💤',
       viewBox: ROW,
       strokes: traced('pajak-zetki')
     },
     {
       id: 'pajak-iksy',
-      name: 'Iksy',
+      name: 'Crosses',
       icon: '✖️',
       viewBox: ROW,
       strokes: row(6, 35, 46, (x) => [
@@ -289,8 +289,8 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'pajak-romby',
-      name: 'Coraz większe romby',
-      short: 'Romby',
+      name: 'Bigger and bigger diamonds',
+      short: 'Diamonds',
       icon: '💠',
       viewBox: FIGURE,
       progressive: true,
@@ -298,7 +298,7 @@ const FAMILY_PATTERNS = {
     },
     {
       id: 'pajak-pajeczyna',
-      name: 'Pajęczyna',
+      name: 'Spider web',
       icon: '🕸️',
       viewBox: FIGURE,
       // Drawn the way the puzzle is solved: one line, without lifting the pen.

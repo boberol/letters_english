@@ -17,9 +17,9 @@ import SettingsModal from './SettingsModal';
 // clearly different shape, so a three-year-old can succeed by matching outlines
 // before they can name letters.
 const LEVELS = {
-  easy: { id: 'easy', label: '🟢 Łatwy', tiles: 6, matches: 2, columns: 3, mirrors: false, mixedCase: false, lookalikes: false },
-  medium: { id: 'medium', label: '🟡 Średni', tiles: 9, matches: 3, columns: 3, mirrors: false, mixedCase: false, lookalikes: true },
-  hard: { id: 'hard', label: '🔴 Trudny', tiles: 12, matches: 3, columns: 4, mirrors: true, mixedCase: true, lookalikes: true }
+  easy: { id: 'easy', label: '🟢 Easy', tiles: 6, matches: 2, columns: 3, mirrors: false, mixedCase: false, lookalikes: false },
+  medium: { id: 'medium', label: '🟡 Medium', tiles: 9, matches: 3, columns: 3, mirrors: false, mixedCase: false, lookalikes: true },
+  hard: { id: 'hard', label: '🔴 Hard', tiles: 12, matches: 3, columns: 4, mirrors: true, mixedCase: true, lookalikes: true }
 };
 
 const STORAGE_KEY = 'letter_app_find_diff';
@@ -131,7 +131,7 @@ export default function FindLetterTool({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color="#0E7490" size={28} />
         </button>
@@ -139,7 +139,7 @@ export default function FindLetterTool({ onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge">🔍</span>
           <span className="stage-title" style={{ color: '#0E7490' }}>
-            Znajdź literę
+            Find the letter
           </span>
         </div>
 
@@ -149,8 +149,8 @@ export default function FindLetterTool({ onBack }) {
             sounds.playClick();
             setShowSettings(true);
           }}
-          title="Poziom trudności"
-          aria-label="Poziom trudności"
+          title="Difficulty"
+          aria-label="Difficulty"
         >
           <Sliders size={20} color="#334155" />
         </button>
@@ -158,15 +158,15 @@ export default function FindLetterTool({ onBack }) {
 
       {/* What to look for */}
       <div className="find-target glass-panel">
-        <span className="find-target-label">Znajdź wszystkie:</span>
-        <div className="find-target-letter" aria-label={`Litera ${board.target}`}>
+        <span className="find-target-label">Find them all:</span>
+        <div className="find-target-letter" aria-label={`Letter ${board.target}`}>
           {board.target}
         </div>
         <StarBadge count={stars} />
       </div>
 
       <div className="find-progress-pill">
-        {found.length} z {level.matches}
+        {found.length} of {level.matches}
       </div>
 
       {/* The tiles to search */}
@@ -187,7 +187,7 @@ export default function FindLetterTool({ onBack }) {
               className={`find-tile ${isFound ? 'found' : ''} ${wrongId === tile.id ? 'wrong' : ''}`}
               onClick={() => handleTile(tile)}
               disabled={isFound || showSuccess}
-              aria-label={`Litera ${tile.char}`}
+              aria-label={`Letter ${tile.char}`}
             >
               <span className="find-tile-letter">{tile.char}</span>
             </button>
@@ -203,17 +203,17 @@ export default function FindLetterTool({ onBack }) {
         }}
       >
         <Shuffle size={18} style={{ marginRight: '6px' }} />
-        Inna litera
+        Another letter
       </button>
 
       {showSuccess && (
-        <FeedbackModal color="#0E7490" title="Brawo!" icon="🔍">
-          Znalezione wszystkie litery <strong className="letter-face">{board.target}</strong>!
+        <FeedbackModal color="#0E7490" title="Well done!" icon="🔍">
+          Found every letter <strong className="letter-face">{board.target}</strong>!
         </FeedbackModal>
       )}
 
       {showSettings && (
-        <SettingsModal title="Poziom trudności" onClose={() => setShowSettings(false)}>
+        <SettingsModal title="Difficulty" onClose={() => setShowSettings(false)}>
           <div className="settings-section">
             <div className="settings-quick-actions">
               {Object.values(LEVELS).map((option) => (
@@ -223,12 +223,12 @@ export default function FindLetterTool({ onBack }) {
                   aria-pressed={levelId === option.id}
                   onClick={() => chooseLevel(option.id)}
                 >
-                  {option.label} — {option.tiles} liter
+                  {option.label} — {option.tiles} letters
                 </button>
               ))}
             </div>
             <p className="settings-hint-text">
-              Na trudnym poziomie pojawiają się litery z ogonkami (ą, ę, ł) oraz wielkie i małe litery razem.
+              On Hard, mirror letters (b, d, p, q) come first, and capital and small letters are mixed.
             </p>
           </div>
         </SettingsModal>

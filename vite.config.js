@@ -34,8 +34,8 @@ const config = {
       manifest: {
         name: 'PlayGoo',
         short_name: 'PlayGoo',
-        description: 'Interaktywna aplikacja do nauki pisania liter dla dzieci.',
-        lang: 'pl',
+        description: 'A playful app that teaches children to write their letters.',
+        lang: 'en',
         // Pinned so the installed app keeps its identity if start_url ever
         // changes; without it the browser derives one from start_url.
         id: '/',

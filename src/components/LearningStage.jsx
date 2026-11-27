@@ -45,7 +45,7 @@ export default function LearningStage({ letter, onBack }) {
   const canvasRef = useRef(null);
   // The letter's three stages are one round: a check that failed in the first
   // still holds back the clean stars in the last, and each stage can be won
-  // once - Enter pressed again under "Wspaniale!" used to add a star a time.
+  // once - Enter pressed again under "Wonderful!" used to add a star a time.
   const round = useRound('letters');
 
   const theme = getThemeForLetter(letter);
@@ -180,7 +180,7 @@ export default function LearningStage({ letter, onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru liter"
+          aria-label="Back to letters"
         >
           <ChevronLeft color={theme.color} size={28} />
         </button>
@@ -188,7 +188,7 @@ export default function LearningStage({ letter, onBack }) {
         <div className="tool-header-title-badge">
           <span className="shape-icon-badge" aria-hidden="true">{theme.icon}</span>
           <span className="stage-title" style={{ color: theme.color }}>
-            Litera {letter.toUpperCase()} {letter.toLowerCase()}
+            Letter {letter.toUpperCase()} {letter.toLowerCase()}
           </span>
         </div>
 
@@ -196,9 +196,9 @@ export default function LearningStage({ letter, onBack }) {
       </div>
 
       <div className="shapes-mode-tabs glass-panel">
-        {stageTab(0, Play, '1. Animacja')}
-        {stageTab(1, Edit3, '2. Po śladzie')}
-        {stageTab(2, Sparkles, '3. Samodzielnie')}
+        {stageTab(0, Play, '1. Watch')}
+        {stageTab(1, Edit3, '2. Trace')}
+        {stageTab(2, Sparkles, '3. On my own')}
       </div>
 
       <LetterCanvas
@@ -225,10 +225,10 @@ export default function LearningStage({ letter, onBack }) {
                   }}
                 >
                   <RotateCcw size={18} style={{ marginRight: '6px' }} aria-hidden="true" />
-                  Odtwórz
+                  Replay
                 </button>
                 <button className="action-btn btn-next" onClick={handleNextStage}>
-                  Dalej <ArrowRight size={18} style={{ marginLeft: '6px' }} aria-hidden="true" />
+                  Next <ArrowRight size={18} style={{ marginLeft: '6px' }} aria-hidden="true" />
                 </button>
               </>
             ),
@@ -236,16 +236,16 @@ export default function LearningStage({ letter, onBack }) {
               <>
                 <button
                   className="action-btn btn-clear"
-                  aria-label="Wyczyść"
+                  aria-label="Clear"
                   onClick={handleClear}
                   disabled={!!feedback}
                 >
                   <Eraser size={18} style={{ marginRight: '6px' }} aria-hidden="true" />
-                  <span className="btn-label-optional">Wyczyść</span>
+                  <span className="btn-label-optional">Clear</span>
                 </button>
                 <button className="action-btn btn-check" onClick={handleCheck} disabled={!!feedback}>
                   <Check size={18} style={{ marginRight: '6px' }} aria-hidden="true" />
-                  Sprawdź!
+                  Check!
                 </button>
               </>
             )
@@ -257,57 +257,57 @@ export default function LearningStage({ letter, onBack }) {
           and what the canvas is showing them about it. The words are for the
           adult; the picture on the canvas is for the child. */}
       {feedback === 'success' && (
-        <FeedbackModal peek color={theme.color} title="Wspaniale!" icon={theme.icon}>
-          Świetna robota!
+        <FeedbackModal peek color={theme.color} title="Wonderful!" icon={theme.icon}>
+          Great job!
         </FeedbackModal>
       )}
 
       {feedback === 'reversed' && (
-        <FeedbackModal peek title="Dobry kształt!" icon="🔄">
-          Zacznij na kropce i rysuj w tę stronę, co pokazuje ekran.
+        <FeedbackModal peek title="Good shape!" icon="🔄">
+          Start on the dot and draw the way the screen shows.
         </FeedbackModal>
       )}
 
       {feedback === 'too-small' && (
-        <FeedbackModal peek title="Troszkę za mała!" icon="🔍">
-          Wypełnij całe zaznaczone miejsce.
+        <FeedbackModal peek title="A little too small!" icon="🔍">
+          Fill the whole marked space.
         </FeedbackModal>
       )}
 
       {feedback === 'too-big' && (
-        <FeedbackModal peek title="Troszkę za duża!" icon="📏">
-          Zmieść się w zaznaczonym miejscu.
+        <FeedbackModal peek title="A little too big!" icon="📏">
+          Keep inside the marked space.
         </FeedbackModal>
       )}
 
       {feedback === 'off-line' && (
-        <FeedbackModal peek title="Dobra literka!" icon={offLineDirection === 'up' ? '⬇️' : '⬆️'}>
-          {offLineDirection === 'up' ? 'Troszkę za wysoko' : 'Troszkę za nisko'} - postaw ją na grubej
-          kresce.
+        <FeedbackModal peek title="Good letter!" icon={offLineDirection === 'up' ? '⬇️' : '⬆️'}>
+          {offLineDirection === 'up' ? 'A little too high' : 'A little too low'} - put it on the thick
+          line.
         </FeedbackModal>
       )}
 
       {feedback === 'off-guide' && (
-        <FeedbackModal peek title="Dobra literka!" icon="✏️">
-          Teraz narysuj ją na szarym śladzie.
+        <FeedbackModal peek title="Good letter!" icon="✏️">
+          Now draw it on the grey guide.
         </FeedbackModal>
       )}
 
       {feedback === 'extra-marks' && (
-        <FeedbackModal peek title="Prawie!" icon="✨">
-          Narysuj samą literkę, bez dodatkowych kresek.
+        <FeedbackModal peek title="Almost!" icon="✨">
+          Draw just the letter, without extra lines.
         </FeedbackModal>
       )}
 
       {feedback === 'wrong-letter' && (
-        <FeedbackModal peek color="#ef4444" title="To inna literka!" icon="🔤">
-          To wygląda jak <strong>{matchedLetter}</strong>. Popatrz, jak pisze się <strong>{letter}</strong>.
+        <FeedbackModal peek color="#ef4444" title="That's a different letter!" icon="🔤">
+          That looks like <strong>{matchedLetter}</strong>. Watch how to write <strong>{letter}</strong>.
         </FeedbackModal>
       )}
 
       {feedback === 'wrong-shape' && (
-        <FeedbackModal peek color="#ef4444" title="Ups!" icon="✏️">
-          Popatrz, jak się ją pisze, i spróbuj jeszcze raz.
+        <FeedbackModal peek color="#ef4444" title="Oops!" icon="✏️">
+          Watch how it is written, and try again.
         </FeedbackModal>
       )}
     </div>

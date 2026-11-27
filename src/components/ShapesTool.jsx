@@ -15,7 +15,7 @@ import { readable } from '../utils/color';
 import SettingsModal from './SettingsModal';
 
 // Lifting the finger only ends the exercise when this much of the shape is
-// drawn. Pressing "Sprawdź!" uses the shared, more forgiving tolerance.
+// drawn. Pressing "Check!" uses the shared, more forgiving tolerance.
 const AUTO_ACCEPT_COVERAGE = 0.7;
 
 // One pen colour. A row of colour swatches above the canvas was one more thing
@@ -461,7 +461,7 @@ export default function ShapesTool({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color={currentShape.color} size={28} />
         </button>
@@ -479,14 +479,14 @@ export default function ShapesTool({ onBack }) {
             sounds.playClick();
             setShowSettings(true);
           }}
-          title="Wybierz kształty"
-          aria-label="Wybierz kształty"
+          title="Choose shapes"
+          aria-label="Choose shapes"
         >
           <Sliders size={20} color="#334155" aria-hidden="true" />
         </button>
       </div>
 
-      {/* Mode Switcher Tabs: Animacja displays first */}
+      {/* Mode Switcher Tabs: Watch displays first */}
       <div className="shapes-mode-tabs glass-panel">
         <button
           className={`shapes-tab-btn ${mode === 'animation' ? 'active' : ''}`}
@@ -495,7 +495,7 @@ export default function ShapesTool({ onBack }) {
             setMode('animation');
           }}
         >
-          <Play size={16} aria-hidden="true" /> Animacja
+          <Play size={16} aria-hidden="true" /> Watch
         </button>
         <button
           className={`shapes-tab-btn ${mode === 'guided' ? 'active' : ''}`}
@@ -504,7 +504,7 @@ export default function ShapesTool({ onBack }) {
             setMode('guided');
           }}
         >
-          <Edit3 size={16} aria-hidden="true" /> Rysuj po śladzie
+          <Edit3 size={16} aria-hidden="true" /> Trace it
         </button>
       </div>
 
@@ -560,7 +560,7 @@ export default function ShapesTool({ onBack }) {
 
         {showStartNudge && (
           <div className="canvas-nudge-pill" role="status">
-            Zacznij na kropce i rysuj po szarej linii ✏️
+            Start on the dot and draw along the grey line ✏️
           </div>
         )}
 
@@ -579,8 +579,8 @@ export default function ShapesTool({ onBack }) {
         <button
           className="action-btn btn-secondary-round"
           onClick={handlePrev}
-          title="Poprzedni kształt (←)"
-          aria-label="Poprzedni kształt"
+          title="Previous shape (←)"
+          aria-label="Previous shape"
         >
           ◀
         </button>
@@ -589,29 +589,29 @@ export default function ShapesTool({ onBack }) {
           active={mode === 'animation' ? 'animation' : 'guided'}
           options={{
             animation: (
-              <button className="action-btn btn-replay" onClick={handleReplay} title="Odtwórz animację (R)">
+              <button className="action-btn btn-replay" onClick={handleReplay} title="Replay animation (R)">
                 <RotateCcw size={18} style={{ marginRight: '6px' }} aria-hidden="true" />
-                Odtwórz
+                Replay
               </button>
             ),
             guided: (
               <>
                 <button
                   className="action-btn btn-clear"
-                  aria-label="Wyczyść"
+                  aria-label="Clear"
                   onClick={() => {
                     sounds.playClick();
                     clearCanvas();
                   }}
                   disabled={!!feedback}
-                  title="Wyczyść (C)"
+                  title="Clear (C)"
                 >
                   <Eraser size={18} style={{ marginRight: '6px' }} aria-hidden="true" />
-                  <span className="btn-label-optional">Wyczyść</span>
+                  <span className="btn-label-optional">Clear</span>
                 </button>
-                <button className="action-btn btn-check" onClick={handleCheck} title="Sprawdź (Enter)">
+                <button className="action-btn btn-check" onClick={handleCheck} title="Check (Enter)">
                   <Check size={18} style={{ marginRight: '6px' }} aria-hidden="true" />
-                  Sprawdź!
+                  Check!
                 </button>
               </>
             )
@@ -621,54 +621,54 @@ export default function ShapesTool({ onBack }) {
         <button
           className="action-btn btn-secondary-round"
           onClick={handleNext}
-          title="Następny kształt (→)"
-          aria-label="Następny kształt"
+          title="Next shape (→)"
+          aria-label="Next shape"
         >
           ▶
         </button>
       </div>
 
       <div className="shape-tracker-pill">
-        Kształt {safeIdx + 1} z {activeShapes.length}
+        Shape {safeIdx + 1} of {activeShapes.length}
       </div>
 
       {feedback === 'success' && (
-        <FeedbackModal peek color={currentShape.color} title="Świetnie!" icon="🌟">
-          Idealnie w liniach!
+        <FeedbackModal peek color={currentShape.color} title="Brilliant!" icon="🌟">
+          Perfectly in the lines!
         </FeedbackModal>
       )}
 
       {feedback === 'outside' && (
-        <FeedbackModal peek title="Prawie!" icon="💪">
-          Ta kreska uciekła za linię. Cofnęliśmy tylko ją - rysuj dalej!
+        <FeedbackModal peek title="Almost!" icon="💪">
+          That line ran outside. We only took that one back - keep drawing!
         </FeedbackModal>
       )}
 
       {feedback === 'reversed' && (
-        <FeedbackModal peek title="W drugą stronę!" icon="🔄">
-          Zacznij na kropce. Kreski rysuj z góry na dół i od lewej do prawej.
+        <FeedbackModal peek title="The other way!" icon="🔄">
+          Start on the dot. Draw lines from top to bottom and from left to right.
         </FeedbackModal>
       )}
 
       {feedback === 'incomplete' && (
-        <FeedbackModal peek title="Prawie gotowe!" icon="✏️">
-          Dorysuj jeszcze resztę kształtu.
+        <FeedbackModal peek title="Nearly there!" icon="✏️">
+          Now draw the rest of the shape.
         </FeedbackModal>
       )}
 
       {showSettings && (
         <SettingsModal
-          title="Wybierz kształty do losowania"
+          title="Choose shapes to practise"
           onClose={() => setShowSettings(false)}
           summary={
             <>
-              Wybrano <strong>{selectedShapeIds.length}</strong> z <strong>{shapesData.length}</strong> kształtów
+              <strong>{selectedShapeIds.length}</strong> of <strong>{shapesData.length}</strong> shapes chosen
             </>
           }
         >
           <div className="settings-quick-actions">
             <button className="quick-chip-btn" onClick={selectAll}>
-              ✅ Wszystkie ({shapesData.length})
+              ✅ All ({shapesData.length})
             </button>
             {shapesCategories.map((cat) => (
               <button key={cat.id} className="quick-chip-btn" onClick={() => selectCategory(cat.id)}>

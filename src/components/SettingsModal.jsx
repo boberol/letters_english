@@ -7,7 +7,7 @@ import { useDialog, stopKeys } from '../hooks/useDialog';
 // use words; it is one component so every panel closes the same way (X, the
 // button at the bottom, Esc) and behaves as a dialog for keyboard and screen
 // reader users. Ten tools used to carry their own copy of this markup.
-export default function SettingsModal({ title, onClose, doneLabel = 'Gotowe', summary = null, children }) {
+export default function SettingsModal({ title, onClose, doneLabel = 'Done', summary = null, children }) {
   const ref = useRef(null);
   const close = () => {
     sounds.playClick();
@@ -28,7 +28,7 @@ export default function SettingsModal({ title, onClose, doneLabel = 'Gotowe', su
       >
         <div className="settings-modal-header">
           <h2 id="settings-modal-title">{title}</h2>
-          <button className="close-modal-btn" onClick={close} aria-label="Zamknij">
+          <button className="close-modal-btn" onClick={close} aria-label="Close">
             <X size={24} aria-hidden="true" />
           </button>
         </div>

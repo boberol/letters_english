@@ -234,7 +234,7 @@ export default function StickerBook({ onBack }) {
             sounds.playClick();
             onBack();
           }}
-          aria-label="Wróć do wyboru zabaw"
+          aria-label="Back to activities"
         >
           <ChevronLeft color="#B45309" size={28} />
         </button>
@@ -242,11 +242,11 @@ export default function StickerBook({ onBack }) {
         <div className="tool-header-title-badge sticker-book-title">
           <span className="shape-icon-badge">🏅</span>
           <span className="stage-title" style={{ color: '#B45309' }}>
-            Moje naklejki
+            My stickers
           </span>
         </div>
 
-        <div className="sticker-scene-picker" role="group" aria-label="Wybierz obrazek">
+        <div className="sticker-scene-picker" role="group" aria-label="Choose a picture">
           {SCENES.map((id) => (
             <button
               key={id}
@@ -313,7 +313,7 @@ export default function StickerBook({ onBack }) {
           className="sticker-next"
           style={{ '--fill': fraction }}
           role="img"
-          aria-label={next ? `Następna naklejka: ${next.label}` : 'Masz wszystkie naklejki!'}
+          aria-label={next ? `Next sticker: ${next.label}` : 'You have every sticker!'}
           title={next ? `${totalStars} / ${next.atStars} ⭐` : undefined}
         >
           <svg className="sticker-next-ring" viewBox="0 0 44 44" aria-hidden="true">
@@ -350,7 +350,7 @@ export default function StickerBook({ onBack }) {
                   stickerScene.add(s.id);
                 }
               }}
-              aria-label={`Przyklej: ${s.label}`}
+              aria-label={`Stick on: ${s.label}`}
               title={s.label}
             >
               <Picture emoji={s.emoji} label={null} className="sticker-tray-picture" />
@@ -364,7 +364,7 @@ export default function StickerBook({ onBack }) {
                 sounds.playClick();
                 bump(setShaking, s.id, 500);
               }}
-              aria-label={`${s.label} - za ${s.atStars} gwiazdek`}
+              aria-label={`${s.label} - at ${s.atStars} stars`}
               title={`${s.atStars} ⭐`}
             >
               <span key={shaking[s.id] || 0} className={shaking[s.id] ? 'sticker-shake' : ''}>

@@ -210,11 +210,11 @@ export default function App() {
           <button
             className="install-btn glass-panel"
             onClick={() => install.prompt()}
-            title="Zainstaluj PlayGoo na tym komputerze"
+            title="Install PlayGoo on this computer"
             id="btn-install"
           >
             <Download size={18} aria-hidden="true" />
-            <span>Zainstaluj</span>
+            <span>Install</span>
           </button>
         )}
 
@@ -222,8 +222,8 @@ export default function App() {
           <button
             className="sound-toggle-btn glass-panel"
             onClick={toggleFullscreen}
-            aria-label={fullscreen ? 'Wyjdź z pełnego ekranu' : 'Pełny ekran'}
-            title={fullscreen ? 'Wyjdź z pełnego ekranu' : 'Pełny ekran'}
+            aria-label={fullscreen ? 'Exit full screen' : 'Full screen'}
+            title={fullscreen ? 'Exit full screen' : 'Full screen'}
             id="btn-fullscreen"
           >
             {fullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
@@ -235,8 +235,8 @@ export default function App() {
           <button
             className="star-counter-btn glass-panel"
             onClick={openStickerBook}
-            aria-label={`Masz ${totalStars} gwiazdek. Zobacz naklejki`}
-            title="Moje naklejki"
+            aria-label={`You have ${totalStars} stars. See your stickers`}
+            title="My stickers"
             id="btn-star-counter"
           >
             {/* The ring round the star fills towards the next sticker, so a
@@ -263,8 +263,8 @@ export default function App() {
         <button
           className="sound-toggle-btn glass-panel"
           onClick={toggleSound}
-          aria-label={isMuted ? 'Włącz dźwięk' : 'Wycisz dźwięk'}
-          title={isMuted ? 'Włącz dźwięk' : 'Wycisz dźwięk'}
+          aria-label={isMuted ? 'Turn sound on' : 'Mute sound'}
+          title={isMuted ? 'Turn sound on' : 'Mute sound'}
           id="btn-toggle-sound"
         >
           {isMuted ? <VolumeX size={20} color="#94a3b8" /> : <Volume2 size={20} color="#6366f1" />}

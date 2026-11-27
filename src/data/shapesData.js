@@ -1,8 +1,8 @@
 export const shapesCategories = [
-  { id: 'lines', name: 'Linie i kąty', icon: '📏' },
-  { id: 'geometry', name: 'Figury geometryczne', icon: '📐' },
-  { id: 'patterns', name: 'Fale i zygzaki', icon: '〰️' },
-  { id: 'fun', name: 'Kształty i symbole', icon: '⭐' }
+  { id: 'lines', name: 'Lines and corners', icon: '📏' },
+  { id: 'geometry', name: 'Shapes', icon: '📐' },
+  { id: 'patterns', name: 'Waves and zigzags', icon: '〰️' },
+  { id: 'fun', name: 'Pictures and symbols', icon: '⭐' }
 ];
 
 // Closed figures go anticlockwise, the same way round as the letter "o": the
@@ -19,7 +19,7 @@ export const shapesData = [
   // --- Linie i kąty ---
   {
     id: 'line-h',
-    name: 'Linia pozioma',
+    name: 'Across line',
     category: 'lines',
     icon: '➖',
     viewBox: '0 0 100 100',
@@ -31,7 +31,7 @@ export const shapesData = [
   },
   {
     id: 'line-v',
-    name: 'Linia pionowa',
+    name: 'Down line',
     category: 'lines',
     icon: '│',
     viewBox: '0 0 100 100',
@@ -43,7 +43,7 @@ export const shapesData = [
   },
   {
     id: 'line-diag-r',
-    name: 'Linia ukośna w prawo',
+    name: 'Slanting line right',
     category: 'lines',
     icon: '╱',
     viewBox: '0 0 100 100',
@@ -55,7 +55,7 @@ export const shapesData = [
   },
   {
     id: 'line-diag-l',
-    name: 'Linia ukośna w lewo',
+    name: 'Slanting line left',
     category: 'lines',
     icon: '╲',
     viewBox: '0 0 100 100',
@@ -80,7 +80,7 @@ export const shapesData = [
   },
   {
     id: 'cross-x',
-    name: 'Krzyżyk',
+    name: 'Cross',
     category: 'lines',
     icon: '✖️',
     viewBox: '0 0 100 100',
@@ -95,7 +95,7 @@ export const shapesData = [
   // --- Figury geometryczne ---
   {
     id: 'circle',
-    name: 'Koło',
+    name: 'Circle',
     category: 'geometry',
     icon: '⭕',
     viewBox: '0 0 100 100',
@@ -107,7 +107,7 @@ export const shapesData = [
   },
   {
     id: 'square',
-    name: 'Kwadrat',
+    name: 'Square',
     category: 'geometry',
     icon: '⬛',
     viewBox: '0 0 100 100',
@@ -119,7 +119,7 @@ export const shapesData = [
   },
   {
     id: 'triangle',
-    name: 'Trójkąt',
+    name: 'Triangle',
     category: 'geometry',
     icon: '🔺',
     viewBox: '0 0 100 100',
@@ -131,7 +131,7 @@ export const shapesData = [
   },
   {
     id: 'diamond',
-    name: 'Romb',
+    name: 'Diamond',
     category: 'geometry',
     icon: '💠',
     viewBox: '0 0 100 100',
@@ -143,7 +143,7 @@ export const shapesData = [
   },
   {
     id: 'rectangle',
-    name: 'Prostokąt',
+    name: 'Rectangle',
     category: 'geometry',
     icon: '▭',
     viewBox: '0 0 100 100',
@@ -157,7 +157,7 @@ export const shapesData = [
   // --- Szlaczki i fale ---
   {
     id: 'wave',
-    name: 'Fala',
+    name: 'Wave',
     category: 'patterns',
     icon: '🌊',
     viewBox: '0 0 100 100',
@@ -169,7 +169,7 @@ export const shapesData = [
   },
   {
     id: 'zigzag',
-    name: 'Zygzak',
+    name: 'Zigzag',
     category: 'patterns',
     icon: '⚡',
     viewBox: '0 0 100 100',
@@ -181,7 +181,7 @@ export const shapesData = [
   },
   {
     id: 'arc',
-    name: 'Łuk / Tęcza',
+    name: 'Arch / Rainbow',
     category: 'patterns',
     icon: '🌈',
     viewBox: '0 0 100 100',
@@ -193,7 +193,7 @@ export const shapesData = [
   },
   {
     id: 'loop',
-    name: 'Pętelka',
+    name: 'Loop',
     category: 'patterns',
     icon: '➰',
     viewBox: '0 0 100 100',
@@ -207,7 +207,7 @@ export const shapesData = [
   // --- Kształty i symbole ---
   {
     id: 'star',
-    name: 'Gwiazdka',
+    name: 'Star',
     category: 'fun',
     icon: '⭐',
     viewBox: '0 0 100 100',
@@ -219,7 +219,7 @@ export const shapesData = [
   },
   {
     id: 'heart',
-    name: 'Serduszko',
+    name: 'Heart',
     category: 'fun',
     icon: '❤️',
     viewBox: '0 0 100 100',
