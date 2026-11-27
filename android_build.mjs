@@ -1,34 +1,31 @@
 // Build the Android app, and prove the result before saying so.
 //
 //   node android_build.mjs
-//   node android_build.mjs --add-fingerprint AA:BB:...   (Google Play's key, no build)
 //
-// The Android app is a Trusted Web Activity: a shell with no web code of its own
-// that opens the live site full screen through the tablet's Chrome. What makes
-// Chrome drop the address bar is a two-way claim - the app names the site, and
-// the site names the app's signing certificate in /.well-known/assetlinks.json.
-// So three things have to come from the same key or the app opens as a browser
-// tab with the URL showing: the keystore that signs the build, the fingerprint
-// in public/.well-known/assetlinks.json, and the copy of that file the live site
-// is actually serving. This script makes the first two from one run and checks
-// the third, the same way license_setup.mjs does for the licence keys.
+// The Android app is a Capacitor project in android/: a WebView with the whole
+// web build copied inside it, so it runs with no network and no browser. This
+// script builds the web app for Android (`npm run build:android`: no service
+// worker, copied into android/ by `cap sync`), then the signed bundle for Play
+// and an APK to install directly, and checks the APK really is signed with the
+// upload key.
 //
-// On the first run it creates the release key: android/release.jks, with a
+// On the first run it creates the upload key: android/release.jks, with a
 // random password written to android/keystore.properties. Nothing is typed and
-// nothing is printed. Both files are gitignored. BACK THEM UP TOGETHER - Android
-// refuses an update signed with a different key, so losing them means every
-// family has to uninstall and reinstall to get a new version of the shell.
-// (The app's content is not affected: that updates from the website.)
+// nothing is printed. Both files are gitignored. BACK THEM UP TOGETHER. With
+// Play App Signing (the default for a new app) Google holds the key families'
+// copies are signed with, and this one only proves an upload came from you; a
+// lost upload key can be reset through Play Console support, but it takes days.
 //
 // Later runs reuse the key. It never overwrites one: a keystore without its
 // properties file stops the script rather than being replaced.
 //
-// Needs JAVA_HOME pointing at a JDK 17-23 and the Android SDK (Android Studio
-// installs it). The first build downloads Gradle and the Android build tools.
+// Needs JAVA_HOME pointing at a JDK 21-24 and the Android SDK (Android Studio
+// installs both; its bundled JDK is fine if it is one of those). The first build
+// downloads Gradle and the Android build tools.
 
 import { X509Certificate, randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -39,8 +36,6 @@ const KEYSTORE_NAME = 'release.jks';
 const KEYSTORE_PATH = join(ANDROID_DIR, KEYSTORE_NAME);
 const KEYSTORE_PROPS = join(ANDROID_DIR, 'keystore.properties');
 const KEY_ALIAS = 'playgoo';
-const ASSETLINKS_PATH = join(ROOT, 'public', '.well-known', 'assetlinks.json');
-const RELATION = 'delegate_permission/common.handle_all_urls';
 const WINDOWS = process.platform === 'win32';
 
 const fail = (message) => {
@@ -48,30 +43,22 @@ const fail = (message) => {
   process.exit(1);
 };
 
-// The host and the package id are read out of the Gradle file rather than
-// repeated here, so there is one place to change either.
-const gradle = readFileSync(join(ANDROID_DIR, 'app', 'build.gradle'), 'utf8');
-const fromGradle = (key) => {
-  const match = gradle.match(new RegExp(`${key}:\\s*'([^']+)'`));
-  if (!match) fail(`Could not find ${key} in android/app/build.gradle.`);
-  return match[1];
-};
-const HOST = fromGradle('hostName');
-const PACKAGE = fromGradle('applicationId');
+// The package id is read out of capacitor.config.json rather than repeated here.
+const PACKAGE = JSON.parse(readFileSync(join(ROOT, 'capacitor.config.json'), 'utf8')).appId;
 
 // --- the toolchain -----------------------------------------------------------
 
 const findJdk = () => {
   const home = process.env.JAVA_HOME;
   if (!home || !existsSync(join(home, 'release'))) {
-    fail('JAVA_HOME is not set to a JDK. Gradle needs one, version 17 to 23.');
+    fail('JAVA_HOME is not set to a JDK. Gradle needs one, version 21 to 24.');
   }
   const version = readFileSync(join(home, 'release'), 'utf8').match(/JAVA_VERSION="(\d+)/);
   const major = version ? Number(version[1]) : 0;
-  // The Gradle this project pins (8.11.1) does not run on anything newer, and
-  // the Android plugin needs at least 17. Whatever `java` is on PATH is ignored.
-  if (major < 17 || major > 23) {
-    fail(`JAVA_HOME is JDK ${major || '?'} (${home}). This build needs JDK 17 to 23.`);
+  // Capacitor 8 compiles for Java 21, and the Gradle it pins (8.14) does not
+  // run on anything newer than 24. Whatever `java` is on PATH is ignored.
+  if (major < 21 || major > 24) {
+    fail(`JAVA_HOME is JDK ${major || '?'} (${home}). This build needs JDK 21 to 24.`);
   }
   return home;
 };
@@ -157,7 +144,7 @@ const ensureKeystore = () => {
       '-keysize', '2048',
       // Google Play requires a key valid beyond 2033; this is about 27 years.
       '-validity', '10000',
-      '-dname', 'CN=PlayGoo',
+      '-dname', 'CN=PlayGoo English',
       '-storepass:env', 'PLAYGOO_KEYSTORE_PASSWORD'
     ],
     { PLAYGOO_KEYSTORE_PASSWORD: password }
@@ -187,59 +174,6 @@ const keystoreFingerprint = (props) => {
   return new X509Certificate(pem).fingerprint256;
 };
 
-// --- assetlinks.json ---------------------------------------------------------
-
-const normaliseFingerprint = (value) => {
-  const hex = String(value).replace(/[^0-9a-f]/gi, '').toUpperCase();
-  if (hex.length !== 64) fail(`Not a SHA-256 fingerprint (64 hex digits): ${value}`);
-  return hex.match(/../g).join(':');
-};
-
-const fingerprintsIn = (statements) =>
-  (Array.isArray(statements) ? statements : [])
-    .filter((s) => s?.target?.namespace === 'android_app' && s.target.package_name === PACKAGE)
-    .flatMap((s) => s.target.sha256_cert_fingerprints || [])
-    .map((f) => f.toUpperCase());
-
-// Fingerprints already in the file are kept. Once the app is on Google Play
-// there are two: this key, which signs what you upload, and Google's own, which
-// signs what families download. Dropping the second one would put the address
-// bar back on every tablet that installed from the store.
-const writeAssetLinks = (fingerprints) => {
-  let existing = [];
-  try {
-    existing = fingerprintsIn(JSON.parse(readFileSync(ASSETLINKS_PATH, 'utf8')));
-  } catch {}
-  const all = [...new Set([...existing, ...fingerprints])];
-  const statements = [
-    {
-      relation: [RELATION],
-      target: { namespace: 'android_app', package_name: PACKAGE, sha256_cert_fingerprints: all }
-    }
-  ];
-  const next = JSON.stringify(statements, null, 2) + '\n';
-  let previous = '';
-  try {
-    previous = readFileSync(ASSETLINKS_PATH, 'utf8');
-  } catch {}
-  if (next !== previous) {
-    mkdirSync(dirname(ASSETLINKS_PATH), { recursive: true });
-    writeFileSync(ASSETLINKS_PATH, next);
-  }
-  return { all, changed: next !== previous };
-};
-
-// What the site is serving right now, which is what Chrome on a tablet checks.
-// A site with no such file answers with index.html, so "not JSON" means absent.
-const liveFingerprints = async () => {
-  try {
-    const response = await fetch(`https://${HOST}/.well-known/assetlinks.json`, { cache: 'no-store' });
-    return fingerprintsIn(await response.json());
-  } catch {
-    return [];
-  }
-};
-
 // --- the build ---------------------------------------------------------------
 
 const ensureLocalProperties = () => {
@@ -251,12 +185,21 @@ const ensureLocalProperties = () => {
 
 const build = () => {
   ensureLocalProperties();
-  console.log('Building (the first run downloads Gradle and the Android build tools)...\n');
+  console.log('Building the web app for Android...\n');
+  const web = run(WINDOWS ? 'npm.cmd' : 'npm', ['run', 'build:android'], { cwd: ROOT, stdio: 'inherit' });
+  if (web.status !== 0) fail('The web build failed - see above.');
+  console.log('\nBuilding the Android app (the first run downloads Gradle and the build tools)...\n');
   const result = run(join(ANDROID_DIR, WINDOWS ? 'gradlew.bat' : 'gradlew'), ['assembleRelease', 'bundleRelease', '--console=plain', '-q'], {
     cwd: ANDROID_DIR,
     stdio: 'inherit'
   });
   if (result.status !== 0) fail('The Gradle build failed - see above.');
+};
+
+const normaliseFingerprint = (value) => {
+  const hex = String(value).replace(/[^0-9a-f]/gi, '').toUpperCase();
+  if (hex.length !== 64) fail(`Not a SHA-256 fingerprint (64 hex digits): ${value}`);
+  return hex.match(/../g).join(':');
 };
 
 // Asks the APK itself which certificate signed it, rather than trusting that
@@ -277,25 +220,12 @@ const apkFingerprint = (apk) => {
 
 // --- main --------------------------------------------------------------------
 
-const args = process.argv.slice(2);
-const addIndex = args.indexOf('--add-fingerprint');
-
-if (addIndex !== -1) {
-  const extra = normaliseFingerprint(args[addIndex + 1] || '');
-  const { all } = writeAssetLinks([extra]);
-  console.log(`\npublic/.well-known/assetlinks.json now lists ${all.length} fingerprint(s) for ${PACKAGE}.`);
-  console.log('It takes effect once the site is deployed (push to master).\n');
-  process.exit(0);
-}
-
 const { props, created } = ensureKeystore();
 const fingerprint = keystoreFingerprint(props);
 if (created) {
-  console.log('\nCreated the release key: android/release.jks and android/keystore.properties.');
-  console.log('Back both up somewhere outside this folder before giving the app to anyone.');
+  console.log('\nCreated the upload key: android/release.jks and android/keystore.properties.');
+  console.log('Back both up somewhere outside this folder before uploading anything to Play.');
 }
-const { changed } = writeAssetLinks([fingerprint]);
-if (changed) console.log('Wrote public/.well-known/assetlinks.json.');
 
 build();
 
@@ -304,24 +234,10 @@ const aab = join(ANDROID_DIR, 'app', 'build', 'outputs', 'bundle', 'release', 'a
 if (!existsSync(apk)) fail(`The build finished but ${apk} is not there.`);
 const signedWith = apkFingerprint(apk);
 if (signedWith !== fingerprint) {
-  fail(`The APK is signed with ${signedWith},\nnot the release key ${fingerprint}.`);
+  fail(`The APK is signed with ${signedWith},\nnot the upload key ${fingerprint}.`);
 }
-
-const live = await liveFingerprints();
 
 console.log(`\nPackage      ${PACKAGE}`);
-console.log(`Opens        https://${HOST}${fromGradle('launchUrl')}`);
 console.log(`Signed with  ${fingerprint}`);
 console.log(`\nAPK (install directly)   ${apk}`);
-console.log(`AAB (upload to Play)     ${aab}`);
-
-if (live.includes(fingerprint)) {
-  console.log(`\nEverything matches: https://${HOST} vouches for this key, so the app opens full screen.\n`);
-} else {
-  console.log(
-    `\nNOT LIVE YET: https://${HOST}/.well-known/assetlinks.json does not list this key.\n` +
-      'Until it does, the app still works but opens with the browser address bar showing.\n' +
-      'Commit public/.well-known/assetlinks.json and push to master, wait for the deploy,\n' +
-      'then run this again - it should end with "Everything matches".\n'
-  );
-}
+console.log(`AAB (upload to Play)     ${aab}\n`);

@@ -1,0 +1,15 @@
+{
+  "appId": "pl.acentrum.playgoo",
+  "appName": "PlayGoo",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "style": "LIGHT"
+    }
+  }
+}

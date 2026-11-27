@@ -1,24 +1,16 @@
 node_modules
 dist
 
-# Holds the licence endpoint and public key. Neither is secret - both ship in
-# the bundle - but .env is where a private key gets pasted by mistake, so it
-# stays out of the repo and .env.example carries the shape instead.
 .env
 .env.local
 .env.*.local
 
-# Batch CSVs from license_codes.mjs. These ARE the sellable codes and the only
-# copy of them: the server stores hashes. Keep them somewhere backed up, never
-# in the repository.
-codes-*.csv
-
-# Wrangler's local D1 state, and the local copies of the Worker's secrets that
-# `wrangler dev` reads instead of the deployed ones.
-worker/node_modules
-worker/.wrangler
-worker/.dev.vars
-
+# The Android upload key and its password, created by android_build.mjs. The
+# only copy: back them up together, outside the repository, and never commit them.
+android/release.jks
+android/keystore.properties
+*.jks
+*.keystore
 
 # Android bundles built for upload to Google Play
 release/

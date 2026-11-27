@@ -1,0 +1,53 @@
+# Builds the Android app on every pull request that could change it, so a
+# broken Gradle project shows up here rather than on Borys's computer on
+# release day. A debug build: it needs no signing key, and the release build
+# differs only in being signed (android_build.mjs does that locally).
+name: Android
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'src/utils/native.js'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - run: npm ci
+
+      # Web build without the service worker, copied into android/ by cap sync.
+      - run: npm run build:android
+
+      - run: ./gradlew assembleDebug --console=plain
+        working-directory: android
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playgoo-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
