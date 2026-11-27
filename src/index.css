@@ -81,6 +81,10 @@ body {
   background-size: 28px 28px, 100% 100%;
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  /* Room for the ad banner the Android app lays over the bottom of the menus
+     (utils/ads.js sets it, and keeps it 0 whenever no banner shows), so the
+     last row of cards scrolls clear of it instead of hiding under it. */
+  padding-bottom: var(--ad-banner-height, 0px);
 }
 
 #root {

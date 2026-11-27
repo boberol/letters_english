@@ -466,6 +466,32 @@ node android_build.mjs     # the above, then the signed AAB and APK; creates the
   and keeps it as a downloadable artifact for 14 days - the quickest way to try a change on a tablet.
 - **JDK 21 to 24.** Capacitor 8 compiles for Java 21 and Gradle 8.14 does not run on 25.
 
+### Ads
+
+The Android app shows AdMob ads; the web build shows none. Everything is in `utils/ads.js`, driven
+by one call: `App.jsx` passes every change of `view` to `onScreen`. Borys's rules (November 2026):
+
+- **A banner on the three menus only** (`tools`, `letters-menu`, `patterns-menu`), at the bottom,
+  hidden the moment an activity opens. It is a native view laid over the web page, so the page pads
+  `body` by `--ad-banner-height`, which `ads.js` sets from the banner's reported size and keeps at 0
+  whenever no banner shows (offline, no fill, an activity). A resumed banner does not report its size
+  again, so the last height is remembered. The menus scroll; activity screens never get the padding.
+- **Full-screen ads only on the way back to the home grid from an activity** - not menu to menu - at
+  most one every 4 minutes (`INTERSTITIAL_GAP_MS`) and none in the first 2 (`FIRST_INTERSTITIAL_MS`).
+  The next one is loaded in the background as soon as one closes.
+- **Child-directed on every request**: `tagForChildDirectedTreatment`, `tagForUnderAgeOfConsent`,
+  `maxAdContentRating: General`, `npa: true`, and the `AD_ID` permission removed in
+  `AndroidManifest.xml`. This is the Google Play Families policy. There is no consent form: Google's
+  consent tools are not shown to a child-directed app. In AdMob itself the app must also be marked
+  as directed at children and use only Families-certified mediation partners.
+- **Test ads until the ids are set.** The ids live in `.env` (`.env.example` has the shape):
+  `ADMOB_APP_ID` (read by `android/app/build.gradle` into the manifest) and `VITE_ADMOB_BANNER_ID` /
+  `VITE_ADMOB_INTERSTITIAL_ID` (read by the web build). Without them the app asks for Google's test
+  units, which is what CI builds get, and `android_build.mjs` refuses to make a release. Never tap
+  real ads on your own device while testing: AdMob suspends accounts for it.
+- **`disableAds()`** is for the "Remove ads" purchase: no banner, no full-screen ad, from then on.
+- The plugin is `@capacitor-community/admob`, pinned to an exact version.
+
 ### Windows PCs and classroom boards
 
 *This section describes the Polish app. The English edition ships on Android only and its web

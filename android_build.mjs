@@ -218,7 +218,37 @@ const apkFingerprint = (apk) => {
   return normaliseFingerprint(match[1]);
 };
 
+// --- the ad ids --------------------------------------------------------------
+
+// A release must carry the real AdMob ids. Without them the app shows Google's
+// test ads, which earn nothing - and that is easy to miss, because the app
+// looks just the same. They live in .env (see .env.example).
+const checkAdIds = () => {
+  const envPath = join(ROOT, '.env');
+  const env = existsSync(envPath) ? readProps(envPath) : {};
+  const wanted = {
+    ADMOB_APP_ID: /^ca-app-pub-\d{16}~\d{10}$/,
+    VITE_ADMOB_BANNER_ID: /^ca-app-pub-\d{16}\/\d{10}$/,
+    VITE_ADMOB_INTERSTITIAL_ID: /^ca-app-pub-\d{16}\/\d{10}$/
+  };
+  const bad = Object.entries(wanted)
+    .filter(([key, shape]) => {
+      const value = env[key] || '';
+      return !shape.test(value) || value.includes('3940256099942544') || /^ca-app-pub-0+[~/]/.test(value);
+    })
+    .map(([key]) => key);
+  if (bad.length) {
+    fail(
+      `.env is missing the real AdMob ${bad.join(', ')}.\n` +
+        'Copy .env.example to .env and fill in the ids from AdMob. Without them the app\n' +
+        'would go out showing test ads.'
+    );
+  }
+};
+
 // --- main --------------------------------------------------------------------
+
+checkAdIds();
 
 const { props, created } = ensureKeystore();
 const fingerprint = keystoreFingerprint(props);
