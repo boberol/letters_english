@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 257.88 609.45">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 545" data-body="8.5 536.5" data-band="0.18 0.68">
   <defs>
     <style>
       .cls-1 {
@@ -12,7 +12,6 @@
     </style>
   </defs>
   <g id="Layer_1-2" data-name="Layer 1">
-    <path class="cls-1" d="M8.5,122.18c0-10.51,240.87,488.92,240.87,474.1V117.01M8.5,600.95V122.18"/>
-    <path class="cls-1" d="M137.67,44.02c9.46-17.1,19.54-35.52,19.54-35.52"/>
+    <path class="cls-1" d="M8.5,8.5L200,536.5L391.5,8.5"/>
   </g>
 </svg>

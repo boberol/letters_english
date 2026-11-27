@@ -33,8 +33,7 @@
 }
 
 /* Andika Bold (SIL Open Font License, src/assets/fonts/OFL.txt): the Latin
-   subset as published by Fontsource, plus a 4 KB cut of its Latin Extended
-   file holding only the nine Polish letters, instead of all 81 KB of it. */
+   subset as published by Fontsource, which covers every English letter. */
 @font-face {
   font-family: "Andika";
   font-style: normal;
@@ -42,15 +41,6 @@
   font-display: swap;
   src: url("./assets/fonts/andika-latin-700.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
-}
-
-@font-face {
-  font-family: "Andika";
-  font-style: normal;
-  font-weight: 700 900;
-  font-display: swap;
-  src: url("./assets/fonts/andika-polish-700.woff2") format("woff2");
-  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 
 html {
@@ -347,11 +337,6 @@ body {
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
-}
-
-.activation-logo {
-  width: clamp(160px, 50%, 240px);
-  margin-bottom: var(--space-sm);
 }
 
 .tools-main-title {
@@ -2784,206 +2769,6 @@ img.family-card-emoji {
 
 /* Short screens: the new pickers shrink like the rest of the app. */
 
-/* ─── Activation Screen ───────────────────── */
-/* The only screen here laid out for reading rather than for tapping: a single
-   column, a measure that stops around 46 characters, and text sized for an
-   adult holding the tablet rather than a child leaning over it. */
-.activation-screen {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-lg) var(--space-md);
-  padding-top: max(var(--space-lg), env(safe-area-inset-top));
-  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
-}
-
-.activation-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-  max-width: 440px;
-  padding: clamp(24px, 5vw, 38px) clamp(20px, 5vw, 34px);
-}
-
-.activation-icon {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #eef2ff, #ede9fe);
-  color: var(--primary-color);
-  margin-bottom: var(--space-sm);
-  flex-shrink: 0;
-}
-
-.activation-icon-warn {
-  background: linear-gradient(135deg, #fef3c7, #fee2e2);
-  color: #b45309;
-}
-
-.activation-title {
-  font-size: clamp(1.25rem, 4vw, 1.55rem);
-  font-weight: 800;
-  color: var(--text-main);
-  margin: 0 0 8px;
-}
-
-.activation-lead {
-  font-size: clamp(0.9rem, 2.4vw, 1rem);
-  line-height: 1.55;
-  color: var(--text-muted);
-  margin: 0 0 var(--space-md);
-  max-width: 34em;
-}
-
-.activation-label {
-  align-self: flex-start;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-  margin-bottom: 6px;
-}
-
-/* Monospaced and widely tracked, because the job here is to compare what is on
-   the screen against what is printed on a card, character by character. */
-.activation-input {
-  width: 100%;
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
-  font-size: clamp(1.15rem, 4.4vw, 1.4rem);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-align: center;
-  text-transform: uppercase;
-  color: var(--text-main);
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 14px 12px;
-  min-height: 56px;
-  outline: none;
-  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
-  /* The one place in the app where selecting text is the point. */
-  user-select: text;
-}
-
-.activation-input::placeholder {
-  color: #cbd5e1;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-}
-
-.activation-input:focus {
-  border-color: var(--primary-color);
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
-}
-
-.activation-input.has-error {
-  border-color: #f87171;
-  background: #fff5f5;
-}
-
-.activation-input:disabled {
-  opacity: 0.6;
-}
-
-.activation-error {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  font-size: 0.88rem;
-  line-height: 1.5;
-  font-weight: 600;
-  color: #b91c1c;
-  background: #fef2f2;
-  border-radius: 14px;
-  padding: 10px 12px;
-  margin: 12px 0 0;
-}
-
-.activation-error svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.activation-submit {
-  width: 100%;
-  margin-top: var(--space-md);
-  gap: 8px;
-}
-
-.activation-spinner {
-  animation: activation-spin 0.9s linear infinite;
-}
-
-@keyframes activation-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .activation-spinner {
-    animation: none;
-  }
-}
-
-.activation-help {
-  margin-top: var(--space-md);
-  padding-top: var(--space-sm);
-  border-top: 1px solid #f1f5f9;
-  width: 100%;
-  font-size: 0.82rem;
-  line-height: 1.55;
-  color: var(--text-muted);
-}
-
-.activation-help p {
-  margin: 0 0 6px;
-}
-
-.activation-help p:last-child {
-  margin-bottom: 0;
-}
-
-.activation-install {
-  display: flex;
-  width: 100%;
-  margin-top: 8px;
-  gap: 8px;
-  background: white;
-  color: var(--primary-color);
-  border: 2px solid currentColor;
-  box-shadow: none;
-}
-
-.activation-support {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-.activation-email {
-  font-weight: 700;
-  color: var(--primary-color);
-  user-select: text;
-}
-
-.activation-privacy {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-weight: 600;
-  color: var(--primary-color);
-}
-
 /* ─── Metronome ───────────────────── */
 .metronome-stage {
   gap: var(--space-md);
@@ -3911,32 +3696,6 @@ img.family-card-emoji {
 
   .patterns-stage .stage-header {
     margin-bottom: 0;
-  }
-}
-
-/* Activation screen on a short tablet held in landscape: the card is the only
-   thing on the page, so it gives up its breathing room before it scrolls. */
-@media (max-height: 680px) {
-  .activation-screen {
-    padding: var(--space-md);
-    align-items: flex-start;
-  }
-
-  .activation-card {
-    padding: var(--space-md) clamp(18px, 4vw, 28px);
-  }
-
-  .activation-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .activation-lead {
-    margin-bottom: var(--space-sm);
-  }
-
-  .activation-help {
-    margin-top: var(--space-sm);
   }
 }
 

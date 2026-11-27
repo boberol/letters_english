@@ -17,9 +17,9 @@ import SettingsModal from './SettingsModal';
 // clearly different shape, so a three-year-old can succeed by matching outlines
 // before they can name letters.
 const LEVELS = {
-  easy: { id: 'easy', label: '🟢 Łatwy', tiles: 6, matches: 2, columns: 3, diacritics: false, mixedCase: false, lookalikes: false },
-  medium: { id: 'medium', label: '🟡 Średni', tiles: 9, matches: 3, columns: 3, diacritics: false, mixedCase: false, lookalikes: true },
-  hard: { id: 'hard', label: '🔴 Trudny', tiles: 12, matches: 3, columns: 4, diacritics: true, mixedCase: true, lookalikes: true }
+  easy: { id: 'easy', label: '🟢 Łatwy', tiles: 6, matches: 2, columns: 3, mirrors: false, mixedCase: false, lookalikes: false },
+  medium: { id: 'medium', label: '🟡 Średni', tiles: 9, matches: 3, columns: 3, mirrors: false, mixedCase: false, lookalikes: true },
+  hard: { id: 'hard', label: '🔴 Trudny', tiles: 12, matches: 3, columns: 4, mirrors: true, mixedCase: true, lookalikes: true }
 };
 
 const STORAGE_KEY = 'letter_app_find_diff';
@@ -35,7 +35,7 @@ const buildRound = (level, previousTarget) => {
 
   const distractorCount = level.tiles - level.matches;
   const distractors = confusableLetters(target, distractorCount, {
-    includeDiacritics: level.diacritics,
+    includeMirrors: level.mirrors,
     lookalikes: level.lookalikes,
     pool: ALPHABET
   });

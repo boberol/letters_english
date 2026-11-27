@@ -1,5 +1,4 @@
-# Checks a pull request before it can reach master, where every push is
-# deployed to customers (deploy.yml). Three things: lint, a test build, and the
+# Checks every pull request. Three things: lint, a test build, and the
 # letter-check harness in a headless browser (check_letters_browser.cjs), which
 # fails if a change lets a backwards, wrong or incomplete letter through or
 # stops accepting a well-drawn one.
@@ -29,11 +28,7 @@ jobs:
 
       - run: npm run lint
 
-      # A test build: there are no licence keys here, and a real build refuses
-      # without them (checkLicenceConfig in vite.config.js).
       - run: npm run build
-        env:
-          ALLOW_TEST_BUILD: '1'
 
       # Not a devDependency, so `npm ci` stays light for the deploy job.
       - run: npm install --no-save playwright@1.63.0 && npx playwright install --with-deps chromium

@@ -1,21 +1,17 @@
-// Builds the letter artwork the tracing tool follows: the uppercase alphabet,
-// and the nine Polish letters that are a base letter plus a diacritic.
+// Builds the capital letter artwork the tracing tool follows (A to Z).
 //
 //   node build_letters.cjs
 //
-// Reads the exported artwork in letter_sources/ and writes src/assets/letters/.
-// Two jobs, both of which have to be done by machine rather than by hand.
+// Reads the exported artwork in letter_sources/upper/ and writes
+// src/assets/letters/upper/. The lowercase letters are used as exported, from
+// src/assets/letters/.
 //
-// 1. Direction. The checker compares trajectories, so a letter drawn bottom-up
+// Direction. The checker compares trajectories, so a letter drawn bottom-up
 //    is a wrong answer rather than a match. The exported SVGs were drawn in
 //    whatever order the drawing program happened to emit: C, G, O, Z, D, J and
 //    L run backwards end to end, another nine have bottom-to-top stems, and H
-//    and T each carry a duplicate stroke. UPPERCASE_FIXES and AUTHORED_LOWER
-//    say, per letter, which subpath survives and which way round it goes.
-//
-// 2. Consistency. Where a letter was drawn by hand it is used as drawn. Where it
-//    was not, it is composed from its base letter plus a mark, so a "C" with a
-//    kreska is the "C" the child already learned rather than a new drawing.
+//    and T each carry a duplicate stroke. UPPERCASE_FIXES
+//    says, per letter, which subpath survives and which way round it goes.
 //
 // Each subpath in a source `d` becomes its own `<path>`: the checker treats one
 // element as one pen stroke, so an E left as a single three-subpath `d` would
@@ -31,7 +27,6 @@ const UPPER_DIR = path.join(LOWER_DIR, 'upper');
 // can regenerate every letter. Re-export into these folders rather than editing
 // anything under src/assets/letters.
 const SRC_UPPER = path.join(__dirname, 'letter_sources', 'upper');
-const SRC_LOWER = path.join(__dirname, 'letter_sources', 'lower');
 
 // ---------------------------------------------------------------- path tools
 
@@ -222,66 +217,6 @@ const writeSvg = (file, { width, height, body, band, strokes }) => {
 
 
 // ------------------------------------------------------------ letter metrics
-
-// The writing band (x-height, 0.43..0.68 of the canvas) is a quarter of the
-// canvas tall; the capital band (0.18..0.68) is half of it. Lowercase artwork
-// is drawn about 326 units tall and capitals about 522, so a unit of capital
-// artwork covers 1.6x less of the screen. Diacritics are therefore sized
-// separately for each case, so that a kreska comes out the same size on screen
-// over a "c" as over a "C" - which is the size it is on paper.
-const LOWER = {
-  band: [0.43, 0.68],
-  kreska: { rise: 103, run: 51, gap: 55 },
-  ogonek: 132,
-  ukosnik: { run: 130, rise: 80, margin: 60 }
-};
-
-const UPPER = {
-  band: [0.18, 0.68],
-  kreska: { rise: 82, run: 41, gap: 44 },
-  // Unlike the kreska, the ogonek is not sized to match the lowercase one on
-  // screen. A kreska floats above the letter and stays about one size whatever
-  // it sits on; an ogonek hangs off the letter as a structural extension of it,
-  // like a descender, and is read in proportion to it. This is the same share
-  // of the capital (~21%) that the drawn "ą" gives its own x-height. Matching
-  // the absolute size instead packs the curl into too small an area to read.
-  ogonek: 105,
-  ukosnik: { run: 104, rise: 64, margin: 48 }
-};
-
-// The kreska on ć ń ó ś ź is pulled down and to the left. A mark this short is
-// mostly vertical, and the rule the rest of the artwork follows is that a
-// mostly vertical stroke starts at the top.
-const kreska = (cx, top, { rise, run }) => ({
-  kind: 'path',
-  d: `M${round(cx + run / 2)},${round(top)}L${round(cx - run / 2)},${round(top + rise)}`
-});
-
-// The kropka on a "ż": two identical end points, which parseSVG turns into a
-// dot the same way it does the tittle on an "i", and which the checker then
-// keeps out of the vote on whether the letter was written backwards.
-const kropka = (cx, cy) => ({ kind: 'line', x1: cx, y1: cy, x2: cx, y2: cy });
-
-// The ogonek on ą ę, taken from the exported "Ą" and scaled to the depth
-// wanted: down and to the left out of the letter, then hooked back up right.
-const ogonek = (x, y, depth) => {
-  const s = depth / 71.23;
-  const n = (v) => round(v * s);
-  return {
-    kind: 'path',
-    d:
-      `M${round(x)},${round(y)}` +
-      `c0,0,${n(-44.23)},${n(63.77)},${n(-4.6)},${n(71.23)}` +
-      `c${n(13.21)},${n(2.49)},${n(28.21)},${n(-10.34)},${n(28.21)},${n(-10.34)}`
-  };
-};
-
-// The bar on an "ł" climbs to the right, and a mostly horizontal stroke is
-// drawn left to right.
-const ukosnik = (x, y, { run, rise }) => ({
-  kind: 'path',
-  d: `M${round(x)},${round(y)}L${round(x + run)},${round(y - rise)}`
-});
 
 // The round letters do not start at twelve o'clock any more: an "o" starts
 // where a "c" and an "a" do, a little round to the right, so the three are
@@ -570,139 +505,12 @@ const strokesBounds = (strokes) => {
   };
 };
 
-// ------------------------------------------------ authored Polish lowercase
-//
-// All nine were drawn by hand and exported, so they are used as drawn
-// rather than composed from a base letter - the artwork wins over the recipe.
-// What still has to be done to them is direction: exported the way they were,
-// the "c" in a "c" with a kreska runs bottom to top, the "o" and the bowl of
-// the "a" go round clockwise from the foot, and every kreska is flicked upwards
-// instead of pulled down.
-//
-// `body` marks the strokes that are the letter itself rather than the mark on
-// it, which is what data-body is measured from. `startAtTop` re-points a closed
-// letter so it begins at twelve o'clock, the way the "o" the app already
-// teaches does. `dot` turns a zero-length path into the two-identical-points
-// line that parseSVG reads as a dot.
-// The kreska as exported is 46 units long against a guide pen 63 units wide -
-// shorter than the pen is thick, so it renders as a round blob rather than a
-// slanted stroke, and a "z" with a kreska is then indistinguishable from a "z"
-// with a dot. Every other mark comes out between 1.8x and 3.4x the pen width;
-// this brings the kreska to 1.8x, and to the same share of the canvas as the
-// one over the capitals. It keeps the exported angle, curve and position - it
-// grows from the end the pen finishes on. Set to 1 for the artwork as drawn.
-const KRESKA_SCALE = 2.5;
+// --------------------------------------------------------------------- build
 
-const AUTHORED_LOWER = {
-  'c-acute': [{ i: 0, body: true, reverse: true }, { i: 1, reverse: true, kreska: true }],
-  'o-acute': [
-    { i: 0, body: true, reverse: true, startAtTop: true, startAt: ROUND_START_DEG },
-    { i: 1, reverse: true, kreska: true }
-  ],
-  // Bowl, back up the stem and down it in one stroke, the way the "a" is, then
-  // the ogonek. Exported from the tip of the foot backwards into the bowl.
-  'a-ogonek': [{ i: 0, body: true, reverse: true }, { i: 1 }],
-  's-acute': [{ i: 0, body: true, reverse: true }, { i: 1, reverse: true, kreska: true }],
-  // The "e" in one stroke, as the base letter is, then the ogonek. Both were
-  // exported the right way round already.
-  'e-ogonek': [{ i: 0, body: true }, { i: 1 }],
-  'z-acute': [{ i: 0, body: true }, { i: 1, reverse: true, kreska: true }],
-  'n-acute': [{ i: 0, body: true }, { i: 1, reverse: true, kreska: true }],
-  // The dot was exported first; the letter is drawn before the mark on it.
-  'z-dot': [{ i: 1, body: true }, { i: 0, dot: true }],
-  // The stem was exported from the tip of its tail upwards, and the bar right
-  // to left.
-  'l-stroke': [{ i: 0, body: true, reverse: true }, { i: 1, reverse: true }]
-};
+const BASE_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-// Applies one entry of the table above and works out the framing from what the
-// letter body actually occupies, rather than from the height of the whole box.
-const authored = (slug, band = LOWER.band) => {
-  const src = readSvg(path.join(SRC_LOWER, slug + '.svg'));
-  const strokes = [];
-  const body = [];
-  for (const step of AUTHORED_LOWER[slug]) {
-    const from = src.strokes[step.i];
-    let stroke;
-    if (step.dot) {
-      const p = endPoint(from.d);
-      stroke = kropka(p.x, p.y);
-    } else if (step.reverse || step.startAtTop || step.startAt != null || step.kreska) {
-      let segs = absSegments(from.d);
-      if (step.reverse) segs = reverseSegments(segs);
-      if (step.startAtTop) segs = startAtTop(segs);
-      if (step.startAt != null) segs = startAtClock(segs, step.startAt);
-      // Grown from the end the pen finishes on, so the mark stays where it was
-      // drawn in relation to the letter and only reaches further up.
-      if (step.kreska && KRESKA_SCALE !== 1) {
-        segs = scaleSegments(segs, KRESKA_SCALE, segs[segs.length - 1].p3);
-      }
-      stroke = { kind: 'path', d: segmentsToPath(segs) };
-    } else {
-      stroke = from;
-    }
-    strokes.push(stroke);
-    if (step.body) body.push(stroke);
-  }
-  // A kreska grown upwards can reach past the top of the exported box. Nothing
-  // downstream cares about the box height - data-body decides where the letter
-  // sits - but the file should still hold its own artwork, so everything drops
-  // by however far the mark overshot.
-  const all = strokesBounds(strokes);
-  const drop = all.minY < 8.5 ? 8.5 - all.minY : 0;
-  const placed = drop ? shift(strokes, 0, drop) : strokes;
-  const bodyBox = strokesBounds(drop ? shift(body, 0, drop) : body);
-
-  return {
-    strokes: placed,
-    body: [bodyBox.minY, bodyBox.maxY],
-    band,
-    box: { width: src.viewBox[2], height: src.viewBox[3] + drop }
-  };
-};
-
-// ----------------------------------------------------------------- composing
-
-const BASE_UPPER = 'ABCDEFGHIJKLMNOPRSTUWYZ'.split('');
-
-// Character to file name. ASCII throughout: a file named with a Polish
-// character has to survive the filesystem, the bundler's glob and the string
-// the app builds to look it up, and those three do not always agree on how to
-// normalise one.
-const SLUGS = {
-  ą: 'a-ogonek',
-  ć: 'c-acute',
-  ę: 'e-ogonek',
-  ł: 'l-stroke',
-  ń: 'n-acute',
-  ó: 'o-acute',
-  ś: 's-acute',
-  ź: 'z-acute',
-  ż: 'z-dot'
-};
-
-// Each Polish letter, the letter it is built from, and the mark that makes it.
-// `at` names the stroke whose end the ogonek hangs from, so the tail carries on
-// from where the pen already is - the lowercase letters are a single stroke,
-// while a capital "A" reaches the foot the ogonek hangs off on its second.
-const POLISH = [
-  { char: 'ą', base: 'a', mark: 'ogonek', at: 0, atUpper: 1 },
-  { char: 'ć', base: 'c', mark: 'kreska' },
-  // The capital hangs it off the right end of the bottom bar, the last of the
-  // three bars an "E" is drawn with.
-  { char: 'ę', base: 'e', mark: 'ogonek', at: 0, atUpper: 3, foot: [138, 338] },
-  // "l" is an ascender in both cases, so it sits in the taller band rather
-  // than the writing band the other eight Polish letters share.
-  { char: 'ł', base: 'l', mark: 'ukosnik', band: [0.18, 0.68] },
-  { char: 'ń', base: 'n', mark: 'kreska' },
-  { char: 'ó', base: 'o', mark: 'kreska' },
-  { char: 'ś', base: 's', mark: 'kreska' },
-  { char: 'ź', base: 'z', mark: 'kreska' },
-  { char: 'ż', base: 'z', mark: 'kropka' }
-];
-
-// How far down the letter the bar on an "ł" crosses it.
-const UKOSNIK_HEIGHT = 0.38;
+// The capital band: a capital sits between the top line and the baseline.
+const UPPER_BAND = [0.18, 0.68];
 
 const shift = (strokes, dx, dy) =>
   strokes.map((s) =>
@@ -711,54 +519,6 @@ const shift = (strokes, dx, dy) =>
       : { kind: 'path', d: translate(s.d, dx, dy) }
   );
 
-// Build one accented letter from its base. The letter is drawn first and the
-// mark added after, which is both how it is taught and what keeps the base
-// letter's own stroke order intact underneath.
-const compose = ({ mark, at, foot, band }, base, metrics) => {
-  const [, , width, height] = base.viewBox;
-  const body = [8.5, height - 8.5];
-
-  // The base letter keeps the box it was exported in, so that a "c" inside a
-  // "ć" is framed exactly as the "c" is; only the mark may push the box out.
-  const around = (strokes, box, added) => {
-    const b = strokeBounds([added]);
-    return {
-      strokes,
-      box: { width: Math.max(box.width, b.maxX + 8.5), height: Math.max(box.height, b.maxY + 8.5) },
-      band: band || metrics.band
-    };
-  };
-
-  if (mark === 'ogonek') {
-    // Normally the tail carries on from where the pen stopped. `foot` overrides
-    // that for a letter whose last stroke does not finish at the baseline.
-    const tail = foot ? { x: foot[0], y: foot[1] } : endPoint(base.strokes[at].d);
-    const mark_ = ogonek(tail.x, tail.y, metrics.ogonek);
-    return { ...around([...base.strokes, mark_], { width, height }, mark_), body };
-  }
-
-  if (mark === 'ukosnik') {
-    const { margin, rise } = metrics.ukosnik;
-    const cy = 8.5 + UKOSNIK_HEIGHT * (height - 17);
-    const mark_ = ukosnik(8.5, cy + rise / 2, metrics.ukosnik);
-    const moved = shift(base.strokes, margin, 0);
-    return { ...around([...moved, mark_], { width: width + margin, height }, mark_), body };
-  }
-
-  // kreska and kropka both sit above the letter, so the letter drops by the
-  // room the mark needs and its body moves down with it.
-  const overhang = metrics.kreska.gap + metrics.kreska.rise;
-  const mark_ =
-    mark === 'kropka'
-      ? kropka(width / 2, 8.5 + metrics.kreska.rise / 2)
-      : kreska(width / 2, 8.5, metrics.kreska);
-  const moved = shift(base.strokes, 0, overhang);
-  return {
-    ...around([...moved, mark_], { width, height: height + overhang }, mark_),
-    body: [body[0] + overhang, body[1] + overhang]
-  };
-};
-
 // Writes a finished letter. Only the width matters to the app, which centres
 // the letter horizontally on its box; the vertical framing comes from
 // data-body, so the box height is there for anything that opens the file.
@@ -766,8 +526,6 @@ const boxed = (file, { strokes, body, band, box }) => {
   writeSvg(file, { width: box.width, height: box.height, body, band, strokes });
   return { file, width: round(box.width), height: round(box.height) };
 };
-
-// --------------------------------------------------------------------- build
 
 const built = [];
 
@@ -791,43 +549,11 @@ for (const ch of BASE_UPPER) {
     ...boxed(path.join(UPPER_DIR, ch.toLowerCase() + '.svg'), {
       strokes,
       body: [8.5, src.viewBox[3] - 8.5],
-      band: UPPER.band,
+      band: UPPER_BAND,
       box: { width: src.viewBox[2], height: src.viewBox[3] }
     }),
     strokes: strokes.length,
     changed: Boolean(UPPERCASE_FIXES[ch])
-  });
-}
-
-// The nine Polish letters, in both cases, each one its base plus a mark.
-for (const spec of POLISH) {
-  const slug = SLUGS[spec.char];
-
-  // Drawn by hand where there is artwork for it; composed from the base letter
-  // where there is not. Every lowercase one has artwork today, and "ł" keeps
-  // the taller band its spec gives it.
-  const lower = AUTHORED_LOWER[slug]
-    ? authored(slug, spec.band)
-    : compose(spec, readSvg(path.join(LOWER_DIR, spec.base + '.svg')), LOWER);
-  built.push({
-    char: spec.char,
-    ...boxed(path.join(LOWER_DIR, slug + '.svg'), lower),
-    strokes: lower.strokes.length,
-    changed: true,
-    how: AUTHORED_LOWER[slug] ? 'drawn' : 'composed'
-  });
-
-  const upperChar = spec.base.toUpperCase();
-  const upperBase = upperBases[upperChar];
-  built.push({
-    char: spec.char.toUpperCase(),
-    ...boxed(
-      path.join(UPPER_DIR, slug + '.svg'),
-      compose({ ...spec, at: spec.atUpper, foot: spec.footUpper }, upperBase, UPPER)
-    ),
-    strokes: upperBase.strokes.length + 1,
-    changed: true,
-    how: 'composed'
   });
 }
 

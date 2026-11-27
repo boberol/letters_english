@@ -4,8 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## The app
 
-"PlayGoo" (formerly "Nauka Liter") — a Polish handwriting/literacy app for pre-readers. All UI text is Polish;
-`index.html` sets `lang="pl"`. Design constraints that drive
+**This repository is the English edition of PlayGoo**, being converted from the Polish app
+("Nauka Liter", imported unchanged in the first commit). The English edition is free on Google Play
+with child-directed AdMob ads and a one-time "Remove ads" purchase; it has no activation codes and no
+licence server. The conversion is done step by step (English letters, text, word bank, a Capacitor
+Android app, ads, the purchase); until a step lands, the notes below still describe the Polish app
+it came from, so Polish names and strings in them are expected.
+
+"PlayGoo" — a handwriting/literacy app for pre-readers. Design constraints that drive
 most decisions here: the user cannot read a sentence, taps with a whole finger on a tablet, and
 may be offline. So: pictures before words, no landing page in front of the activity grid, no
 network requests at runtime (sounds are synthesised, artwork and the letter font are bundled).
@@ -18,7 +24,7 @@ shown instead - see **Feedback a pre-reader can follow** below.
 
 ```bash
 npm run dev      # Vite dev server on :5173
-npm run build    # production build to dist/ - refuses without a usable licence config in .env
+npm run build    # production build to dist/
 npm run lint     # eslint (0 errors and 0 warnings expected)
 npm run preview  # serve the built output
 ```
@@ -31,9 +37,7 @@ passing `exact`/`light`, `medium` drops below 95%, or anything backwards, wrong 
 accepted. It takes about 30 seconds and runs locally the same way. Prefer the Browser pane (`preview_start` with
 `{name: "letters-dev"}`, configured in `.claude/launch.json`) over `npm run dev` in a shell.
 `{name: "letters-preview"}` serves the built output instead, which is the only way to exercise the
-service worker — it is switched off in dev (see **Offline and installing**). Without a real licence
-configuration in `.env`, build for it with `ALLOW_TEST_BUILD=1 npm run build` (see **Licensing and
-activation**).
+service worker — it is switched off in dev (see **Offline and installing**).
 
 `fix_svgs.cjs`, `fix_y.cjs`, `build_letters.cjs`, `build_icons.cjs`, `preview_letters.cjs` and
 `check_letters.cjs` are Node scripts used to build and check the letter SVGs. They are ESLint-ignored and are not part
@@ -43,14 +47,6 @@ server's console rather than run with Node (see the end of **Letter artwork**).
 
 `build_pictures.cjs <folder-of-pngs>` turns exported word pictures into the WebP files the picture
 games bundle, and checks them against the word list. Also ESLint-ignored. See **Pictures**.
-
-`license_setup.mjs`, `license_keys.mjs`, `license_codes.mjs`, `license_admin.mjs` and
-`license_check.mjs` are the operator side of the activation system - set the keys and admin token on
-the Worker and prove them end to end, print a keypair without touching anything, mint a batch of
-codes, run the support desk, and check the licence server end to end. Also ESLint-ignored, also not
-part of the build. See **Licensing and activation** and **The licence server**. `license_check.mjs` is the nearest thing in this repo to a test suite,
-and unlike the letter checks it needs no browser: `cd worker && npx wrangler dev --port 8788` in one
-terminal, `node license_check.mjs` in another.
 
 `android_build.mjs` builds the Android app out of `android/`, a Gradle project that is *not* part of
 the Vite build and needs a JDK and the Android SDK rather than anything in `node_modules`. Also
@@ -172,20 +168,23 @@ stylus is not stricter than a 60 Hz finger.
 
 ### Letter artwork
 
-Two alphabets, deliberately. `ALPHABET` is the 23 base letters and is what the letter *games*
-draw from — their distractors come from `letterConfusion`, which brings the accented look-alikes
-in only on the hardest setting, because telling `a` from `ą` is its own skill. `TRACING_ALPHABET`
-is all 32 Polish letters and is what the tracing tool offers, in both cases.
+`ALPHABET` is the 26 English letters, used by the letter games and (as `TRACING_ALPHABET`) the
+tracing tool, in both cases. Distractors come from `letterConfusion`: shape look-alikes, plus the
+mirror letters (b d p q, m w, n u, `MIRROR_PAIRS`) put first on the hardest Znajdź literę setting.
+The Polish app's nine accented letters and their artwork were removed.
+
+**q, v, x and Q, V, X are placeholders** (November 2026): Polish has none of them, so they were
+built from straight lines and the existing `a` bowl / `O` until Borys's drawn exports arrive. The
+lowercase three are `src/assets/letters/{q,v,x}.svg` (hand-written, like the other 23 originals);
+the capitals are `letter_sources/upper/{Q,V,X}.svg`, built by `build_letters.cjs`. All six pass the
+letter check. Replace them with the exports, add `UPPERCASE_FIXES` entries if a stroke runs the
+wrong way, and re-run the check.
 
 Three things about the files:
 
 - **Capitals live in `assets/letters/upper/`.** `A.svg` and `a.svg` are the same name to Windows
   and macOS, so a flat folder would lose one of them the first time the artwork was copied
   anywhere. Lowercase keeps `assets/letters/`.
-- **File names are ASCII** — `ą` is `a-ogonek.svg`, `ż` is `z-dot.svg` (`ASSET_SLUGS`). A name
-  carrying the letter itself has to survive the filesystem, the bundler's glob and the string
-  `buildLetterPaths` concatenates to look it up, and those three do not agree on how to normalise
-  a Polish character.
 - **`data-body` and `data-band` on the `<svg>` decide the framing.** `data-body` is the y range of
   the letter body; `data-band` is where that body belongs between the ruled lines (`0.43 0.68` is
   the writing band, `0.18 0.68` the ascender and capital band). Without them `parseSVG` falls back
@@ -204,10 +203,10 @@ purpose: a kreska over a capital rises about 14% above the top line, and at 10% 
 of the canvas. At 18% it and the tail of a `g` clear their edges by about the same 4-5%. Move all
 four together, then rebuild the letters.
 
-**Do not hand-edit anything in `assets/letters/upper/`, or the nine accented lowercase files.**
-`node build_letters.cjs` regenerates all 41 of them from `letter_sources/`, which holds the
-exported artwork: `letter_sources/upper/` the 32 capitals, `letter_sources/lower/` the nine
-Polish lowercase letters that were drawn by hand. Re-export into those folders and re-run it. It
+**Do not hand-edit anything in `assets/letters/upper/`.** `node build_letters.cjs` regenerates
+all 26 capitals from `letter_sources/upper/`, the exported artwork. Re-export into that folder and
+re-run it. (The notes below on marks and composing describe the Polish accented letters the script
+used to build too; that code is gone.) It
 exists because of three things that cannot be done by hand at this scale:
 
 - *Direction, order and stroke splitting.* The checker compares trajectories, so a letter drawn
@@ -241,7 +240,7 @@ Neither is a substitute for the real check, which needs a browser because sampli
 
 ```js
 const v = await import('/check_validation.js');
-await v.run({ letters: 'aąbcćdeęfghijklłmnńoóprsśtuwyzźż', trials: 8 });  // then the capitals
+await v.run({ letters: 'abcdefghijklmnopqrstuvwxyz', trials: 8 });  // then the capitals
 v.margins({ letters: 'abh' });      // raw scores: right attempts against the nearest wrong letters
 v.explain('b', 'guided', 'medium', 3);
 ```
@@ -519,223 +518,14 @@ PC with the `WebAppInstallForceList` policy (Edge and Chrome both have it).
   scaling should be zoomed (Ctrl and +, remembered per site) rather than given more CSS: zoom scales
   every control, a breakpoint would only scale the canvas.
 
-### Licensing and activation
+### No licence, no deploy
 
-The app is locked from the very first launch: `App.jsx` renders `ActivationScreen` instead of the
-tool grid until a licence verifies. That screen is the one place here written for an adult, and the
-one deliberate exception to "no landing page in front of the activity grid" - it is seen once, by
-the parent setting the tablet up, before the child is handed it.
-
-**Activation is online; use is not.** Redeeming a code is one POST, once. What comes back is a token
-signed by a key the app does not hold, and every launch after that verifies the signature locally -
-a tablet that never sees the network again keeps working. That single round trip is also the only
-thing that makes the two-device limit real: a purely local check cannot know a code was already used
-on somebody else's tablet, because it has nobody to ask. This is why the offline story in **Offline
-and installing** survives intact - the precached build still runs with no network, it just had to be
-let in once.
-
-Read these three together:
-
-- **`utils/licenseCode.js`** - the shape of the code a parent types, and nothing else. Crockford
-  Base32 (no I, L, O or U) because a code is read off a card and typed on a tablet, so the alphabet
-  must not hold two characters that look alike; `normaliseCode` then *folds* the substitutions
-  people actually make rather than rejecting them, so `7k4m 92xq b3tp` and `7K4M-92XQ-B3TP` are one
-  code. Eleven random characters plus a weighted check character: 55 bits, and the check character
-  catches a typo before it costs a round trip. Imported by the batch generator too, so a code minted
-  on your machine and a code typed on a tablet are judged by the same rules. **The Worker keeps its
-  own copy of `normaliseCode` on purpose** - it must not take a patched client's word for what the
-  canonical form of a code is.
-- **`utils/license.js`** - a singleton store shaped exactly like `progress`: subscribe/getSnapshot,
-  read through `hooks/useLicense.js`, every localStorage touch wrapped. `status` is
-  `checking | locked | unlocked | unconfigured`. ECDSA P-256 rather than Ed25519: same 64-byte
-  signature, but P-256 has been in WebCrypto for a decade and the target is whatever Android tablet
-  a family already owns.
-- **`components/ActivationScreen.jsx`** - one Polish sentence per failure, and each says what to do
-  next, because a code that will not activate is a support email. **Adding an error reason to the
-  Worker means adding its sentence here**, or the parent gets the generic fallback.
-
-Things that are the way they are for a reason:
-
-- **A build with no key locks rather than trusting storage.** Failing open would mean one missing
-  environment variable silently ships the app unlocked and nobody notices until it has shipped.
-  `VITE_LICENSE_DEV_BYPASS` skips the gate in `npm run dev` and cannot do anything in a build: it is
-  ANDed with `import.meta.env.DEV`, which Vite replaces with a literal `false` in `vite build` and
-  then drops the branch. Verified by grepping `dist/` - the flag does not appear.
-- **And `vite build` refuses to produce that build in the first place.** Locking at runtime is the
-  right failure, but a customer's tablet is the wrong place to discover it: an unconfigured build
-  installs, precaches, and then accepts no code. `checkLicenceConfig` in `vite.config.js` fails the
-  build when `VITE_ACTIVATION_URL` or `VITE_LICENSE_PUBLIC_KEY` is missing; when the URL is still the
-  `.env.example` placeholder, points at this machine, or is not https (a page served over https
-  cannot call http, so every activation would read as offline); and when the key does not import
-  as P-256 SPKI - the same import the app does at launch. `ALLOW_TEST_BUILD=1` downgrades the
-  refusal to a warning for builds that are not for customers; it is not `VITE_`-prefixed, so it
-  never reaches the bundle. The placeholder test is case-insensitive because `new URL` lowercases
-  hostnames - matching `YOUR-SUBDOMAIN` as typed silently never fired.
-- **The device id is a random UUID, not a fingerprint.** A browser has no stable hardware id, and
-  the fingerprints people build are unreliable and a privacy problem on a child's device. The cost
-  is that clearing site data loses it, which is why the server re-issues to a device it has already
-  seen without spending a slot, and why there is a reset endpoint for a tablet that is genuinely
-  replaced.
-- **The token is bound to that device id and checked on every launch.** Without that, copying one
-  localStorage value between tablets would defeat the whole thing.
-- **Enter is handled explicitly on the code input.** The form's implicit submission does not fire
-  for it, and the Go key on a tablet keyboard is what a parent reaches for after the last character.
-  Tested both ways before it was left in.
-- **`offline` means the request got no answer; `server-error` means it got a bad one.** A fetch
-  that throws - no network, the 15-second timeout, or a CORS refusal, which a page cannot tell
-  apart from being offline - is `offline`. A server that answered with a body that is not JSON (a
-  Cloudflare error page, a proxy, a wrong endpoint) is `server-error`. They used to share one
-  branch, which told a parent to check their internet when the fault was the server's. The CORS
-  case matters on deploy: an `ALLOWED_ORIGIN` that does not exactly match the app's origin makes
-  every activation look like the parent is offline.
-- **A licence runs for a year from the code's first activation, on any device.** Not from minting:
-  a code can wait in a drawer for months. `codes.valid_days` (default 365, NULL perpetual) is counted
-  from `codes.first_used_at`, which the Worker sets once - after a slot is held, so a refused attempt
-  starts nobody's year, and with an `IS NULL` guard read back afterwards, so two devices activating a
-  new code at the same moment agree on one value. A support reset deletes activations and leaves
-  `first_used_at` alone: a new tablet is not a new year. An expired code is refused *before* a slot
-  is claimed. Every device on a code gets the same `exp` in its token, however late it joins, and
-  `iat` is the server's clock. A fixed `expires_at` can still be set at minting; the earlier end wins.
-- **The end date is checked against the tablet's own clock, and that is deliberate.** A tablet with
-  its date wound back keeps a licence past its end. Guarding against that means distrusting the clock
-  in the other direction too, and a cheap tablet whose clock jumps forward once would then lock a
-  paying family out for good - the worse failure. Two things soften the clock problem instead. A
-  stored token that has run out is kept, not deleted, and shown as `licence-expired` with its own
-  title ("Licencja wygasła") rather than the first-run greeting, so a tablet whose date was merely
-  wrong unlocks again once it is corrected. And at activation, a token the device already calls
-  expired while its clock is more than a day away from `iat` is reported as `clock-wrong` - "fix the
-  date" - instead of telling a parent their brand-new code has run out.
-- **Databases created before licences had a length need `worker/migrate-001-licence-duration.sql`**,
-  once, before deploying the Worker that reads the new columns. `schema.sql` only creates tables that
-  do not exist, so it cannot add them. The migration gives every existing code 365 days and backfills
-  `first_used_at` from its earliest activation, so a code already in use does not get a fresh year on
-  its next redemption. A second run stops at "duplicate column name" and changes nothing. Tokens
-  issued before the change carry `exp: null` and stay perpetual on the devices that hold them.
-
-What this does **not** do, and cannot: stop somebody who edits the bundle. The check runs on the
-user's device, so it is patchable by anyone willing to read the JavaScript, and the build is
-precached and copyable regardless. It raises the bar to "a code cannot be forged and cannot be
-passed around", which is the part that costs sales. Relatedly, disabling a code stops it being
-*redeemed* on anything new but does not revoke tokens already on tablets - those are verified
-offline against a signature, and nothing reaches back to them.
-
-### The licence server
-
-`worker/` is a separate deployable: a Cloudflare Worker over a D1 database, with its own
-`package.json` and its own `npm install`. `worker/README.md` is the runbook; the design notes are
-here.
-
-**D1 rather than KV**, because counting activations is a read-modify-write on one row and KV is
-eventually consistent across colos - a parent activating a tablet and a phone back to back could
-have both reads see room and both writes succeed, quietly turning a two-device code into a
-three-device one. D1 is SQLite with a single writer, so the whole limit is one conditional INSERT
-that either changes a row or does not:
-
-```sql
-INSERT INTO activations (...) SELECT ?1, ?2, ?3, ?3
-WHERE (SELECT COUNT(*) FROM activations WHERE code_hash = ?1)
-      < (SELECT device_limit FROM codes WHERE hash = ?1)
-```
-
-**Only hashes are stored.** The database holds `sha256(code)`, never a code, so a dump of it is
-worth nothing. `cid` - the first twelve hex characters of that hash - is the short public reference
-carried in the token and quoted by support, so nobody has to paste a live code into a chat window.
-It is `UNIQUE` so a collision would fail at insert rather than quietly making two codes look like
-one.
-
-Which means **the batch CSV `license_codes.mjs` writes is the only copy of those codes**. The script
-uploads hashes and keeps the plaintext on your machine; lose the file before handing the codes out
-and you mint a new batch. `codes-*.csv` is gitignored, and so is `.env` - neither the endpoint nor
-the public key in it is secret (both ship in the bundle), but `.env` is where a private key gets
-pasted by mistake.
-
-The rate limiter counts *failed* attempts per IP. It is not what stops a brute force - 55 bits
-already does - it is there so somebody hammering the endpoint cannot turn into a D1 bill. A parent
-who mistypes twice and then reads the help text is not charged for it.
-
-**Setting it up from nothing** (the runbook, with PowerShell forms, is `worker/README.md`):
-
-```bash
-cd worker && npm install
-npx wrangler login
-npx wrangler d1 create nauka-liter-licences  # paste the id into wrangler.toml
-npm run schema:remote
-npm run deploy                               # prints the Worker URL
-cd .. && cp .env.example .env                # set VITE_ACTIVATION_URL to <that URL>/activate
-node license_setup.mjs                       # keys and admin token, proven end to end
-```
-
-Then `node license_codes.mjs --count 50 --batch "2026-01-sklep"` mints and registers a batch.
-Losing the private key does not break tablets already activated - they verify against the public key
-their build shipped with - but every future code needs a new pair *and* a new build. Keep a backup
-outside this repository.
-
-**Use `license_setup.mjs`, not `license_keys.mjs` plus `wrangler secret put`.** The first setup went
-wrong exactly that way. `secret put` reads a pasted value into a hidden prompt nobody can check, and
-the stored admin token never matched what was typed - every admin call a 401. The keys had also been
-generated more than once, so the private key on the Worker and the public key in `.env` came from
-different runs; activation would have failed later as `server-error`, after spending a device slot.
-`license_setup.mjs` mints all three values in one run, sends the secrets through `wrangler secret
-bulk` and a temp file it deletes, writes the public key into `.env`, and then proves the pair against
-the live Worker: it registers a throwaway code in batch `setup-check`, activates it, verifies the
-token with the new public key, and disables the code. Only "Everything matches" means done.
-Re-running it rotates all three together - free before launch, a new build after.
-`license_keys.mjs` still only prints, for when a key is wanted without touching the Worker.
-
-**What is deployed**, all on the Cloudflare free plan:
-
-- Worker `nauka-liter-licence` at `https://nauka-liter-licence.bobrborys321.workers.dev`
-- D1 `nauka-liter-licences` (EEUR). Its id is in `worker/wrangler.toml` and is not a secret.
-- Pages project `naukaliterek`, the app itself, at `https://naukaliterek.pages.dev`
-
-**And a second address is live: `https://literki.acentrum.pl`** (Borys, November 2026: both stay "for
-now"). It is shared Apache hosting at AFTERMARKET.pl, the address the Android app opens and the
-privacy policy names; `public/.htaccess` is its configuration (HTTPS, the single-page fallback,
-`sw.js` never cached) and rides along in every build, which is why it is in `public/`. Nothing in
-this repository deploys there: `deploy.yml` only reaches Cloudflare. `netlify.toml` is something else
-again - Netlify builds test previews of pull requests, never anything customers use.
-
-**Publishing is automatic:** `.github/workflows/deploy.yml` builds and deploys every push to `master`,
-using repository secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `VITE_ACTIVATION_URL` and
-`VITE_LICENSE_PUBLIC_KEY` (the build needs the last two, and `.env` is not in the repo). So anything
-pushed to `master` reaches customers; unfinished work belongs on another branch. It is a GitHub
-Action running wrangler rather than Cloudflare's Git integration because the project was created by
-direct upload, which Cloudflare cannot switch to Git - that needs a new project, and a new project is
-a new origin (see below). The manual equivalent is `npm run build`, then
-`npx wrangler pages deploy dist --project-name naukaliterek --branch master`. **`--branch master` is
-not optional:** it is the project's production branch, and a deploy labelled anything else becomes a
-preview at a hashed subdomain while the real address keeps serving the old build. The project was
-created with `wrangler pages project create --force`. Current wrangler delegates new Pages projects
-to Workers, and that path died trying to parse the async `defineConfig` in `vite.config.js`; `--force`
-was needed that once, and deploys to the existing project do not take it. A brand-new `*.pages.dev`
-name also took a few minutes to resolve after its first deploy, which looks exactly like a failure.
-
-`ALLOWED_ORIGIN` in `worker/wrangler.toml` holds both live origins, comma-separated
-(`https://literki.acentrum.pl,https://naukaliterek.pages.dev`); the Worker answers each request with
-whichever of them it came from. **Two origins means two licence slots on one tablet**: storage is per
-origin, so a tablet activated in the browser on one address and then opened on the other - the
-Android app is the acentrum one - asks for its code again and spends a second slot. That lasts until
-one address is retired. Three things follow from the origin list:
-
-- **Codes do not activate from `localhost`.** The Worker answers the dev and preview servers with the
-  live origin, the browser refuses the response, and the app reports `offline`. Test activation on
-  the live site, or against `wrangler dev --var "ALLOWED_ORIGIN:*"` with a local test build.
-- **The origin is part of every licence.** The device id, the token and the precached build all live
-  in storage scoped to that origin, so moving domains after launch - `naukaliterek.pl` was the plan -
-  turns every activated tablet into a fresh install that asks for its code again and spends a slot.
-  Change domains before selling, not after. To do it: add the domain to Cloudflare, attach it to the
-  Pages project, redirect `www` to the bare domain (each origin has to be listed in `ALLOWED_ORIGIN`
-  exactly, so a site reachable at an unlisted one answers `offline` there), set `ALLOWED_ORIGIN`,
-  redeploy the Worker. `VITE_ACTIVATION_URL` can stay on `workers.dev`.
-
-**A rebuild does not reach a browser that already has the app.** `autoUpdate` installs the new build
-in the background and switches over on the next launch, so the page in front of you straight after a
-build is still the old one. That became a real fault once: after the keys were rotated, a preview tab
-kept running the cached build with the old public key, the Worker issued a perfectly good token for a
-real code, and the stale page rejected it as `server-error` - with the slot already spent on the
-server. Reading the `activations` table (`wrangler d1 execute ... --remote`) is how to tell "the
-server said no" from "the page said no". After a key change, test with Ctrl+Shift+R or a fresh
-profile. Customers only meet this if the key changes after launch, which it should not.
+The Polish app locked itself behind activation codes checked by a Cloudflare Worker, and every push
+to `master` deployed to the Polish site. Both were removed from this repository on purpose: the
+English edition is free (ads plus a Play purchase), and nothing here may ever deploy to the Polish
+addresses (`naukaliterek.pages.dev`, `literki.acentrum.pl`). Do not bring back a `deploy.yml`
+pointing at them. Some notes above still mention the licence as the reason for a design choice
+(the TWA, origins); those reasons no longer apply here.
 
 ### Pictures
 
@@ -857,8 +647,7 @@ Noto Emoji is OFL/Apache — attribution belongs in a README if this is ever pub
   Strzałki and Liczby), or the tablet dims and locks mid-run while the child draws on paper.
 - **Letters a child reads are drawn in Andika** (`--font-letters`, bundled in `src/assets/fonts/`,
   SIL OFL): a single-storey a and g like the tracing guides, and an I, l and 1 that differ. Without
-  it every device drew its own system font. The Polish file is a 4 KB subset of Fontsource's Latin
-  Extended cut (`pyftsubset ... --unicodes="U+0104-0107,U+0118-0119,U+0141-0144,U+015A-015B,U+0179-017C"`).
+  it every device drew its own system font. Only the Latin subset ships; the Polish cut was removed.
 - **Colour as text needs the dark shade.** `data/colors.js` gives each colour a `text` for titles
   and labels (the bright `color` is for fills a child names; yellow on cream is about 2:1), Kolorowe
   liczby edges its digits in it, and `FeedbackModal` darkens its title colour to 4.5:1 by itself.

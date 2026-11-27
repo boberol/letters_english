@@ -5,35 +5,6 @@ const customSvgs = import.meta.glob('../assets/letters/*.svg', { eager: true, qu
 // quietly overwrite the other the moment the artwork was copied anywhere.
 const upperSvgs = import.meta.glob('../assets/letters/upper/*.svg', { eager: true, query: '?raw', import: 'default' });
 
-// File names stay ASCII. A file named with the letter itself has to survive the
-// filesystem, the bundler's glob and the string built below to look it up, and
-// those three do not always agree on how to normalise a Polish character.
-const ASSET_SLUGS = {
-  ą: 'a-ogonek',
-  ć: 'c-acute',
-  ę: 'e-ogonek',
-  ł: 'l-stroke',
-  ń: 'n-acute',
-  ó: 'o-acute',
-  ś: 's-acute',
-  ź: 'z-acute',
-  ż: 'z-dot'
-};
-
-// The letter each Polish one is built from - the artwork is that letter plus a
-// mark, so it inherits its shape, its theme and its fallback paths.
-export const BASE_LETTER = {
-  ą: 'a',
-  ć: 'c',
-  ę: 'e',
-  ł: 'l',
-  ń: 'n',
-  ó: 'o',
-  ś: 's',
-  ź: 'z',
-  ż: 'z'
-};
-
 const letterTypes = {
   ascender: ['b', 'd', 'f', 'h', 'k', 'l', 't'],
   descender: ['g', 'p', 'q', 'y'],
@@ -68,12 +39,9 @@ const parseSVG = (svgString, letter) => {
       let V;
       let minY;
 
-      // A letter carrying a diacritic says outright which part of the drawing
-      // is the letter body and which band that body belongs in. Guessing from
-      // the box, the way the rule below does, would fit accent and letter
-      // together into the writing band and leave every accented letter smaller
-      // than the letter it is built from - the one thing "the same letter, plus
-      // a mark" must not be. build_letters.cjs writes both attributes.
+      // A letter built by build_letters.cjs says outright which part of the
+      // drawing is the letter body and which band that body belongs in, so it
+      // is framed from that rather than guessed from the box below.
       const body = (svgNode.getAttribute('data-body') || '').trim().split(/\s+/).map(parseFloat);
       const band = (svgNode.getAttribute('data-band') || '').trim().split(/\s+/).map(parseFloat);
 
@@ -178,18 +146,10 @@ export const lettersData = {
   z: [{ path: "M 20,35 L 80,35 L 20,60 L 80,60" }]
 };
 
-// The alphabet the letter games work from. Polish drops q, v and x.
-//
-// Deliberately the base letters only. The games that draw from this pool ask a
-// child to pick a letter out of a grid, and letterConfusion brings the accented
-// look-alikes in as distractors on the hardest setting - telling "a" from "ą"
-// is its own skill, held back until the plain letters are known.
-export const ALPHABET = 'abcdefghijklmnoprstuwyz'.split('');
-
-// What the tracing tool offers, in dictionary order: the full Polish alphabet,
-// including the nine letters that are a base letter plus a tail, a line or a
-// dot. Each is available in both cases.
-export const TRACING_ALPHABET = 'aąbcćdeęfghijklłmnńoóprsśtuwyzźż'.split('');
+// The 26 letters of the English alphabet. The letter games pick from it and
+// the tracing tool offers every one of them, in both cases.
+export const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+export const TRACING_ALPHABET = ALPHABET;
 
 // Parsing an SVG asset means a DOMParser pass, and the checker now compares a
 // drawing against every letter, so results are kept.
@@ -207,7 +167,7 @@ export const getLetterPaths = (letter) => {
 
 const buildLetterPaths = (letter) => {
   const lower = letter.toLowerCase();
-  const slug = ASSET_SLUGS[lower] || lower;
+  const slug = lower;
   const isCapital = letter !== lower;
   const source = isCapital ? upperSvgs : customSvgs;
   const customKey = isCapital
@@ -221,9 +181,8 @@ const buildLetterPaths = (letter) => {
     }
   }
 
-  // No artwork: an accented letter falls back to the letter it is built from,
-  // which is at least the right shape, rather than to "a".
-  const data = lettersData[lower] || lettersData[BASE_LETTER[lower]] || lettersData["a"];
+  // No artwork: fall back to the simple built-in strokes for the letter.
+  const data = lettersData[lower] || lettersData["a"];
   // The fallback paths were written against ruled lines at 10/35/60/85; the
   // lines now sit eight points lower, so the box moves up to meet them.
   if (Array.isArray(data)) {
