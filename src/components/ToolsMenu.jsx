@@ -145,6 +145,11 @@ const TOOLS_LIST = [
   }
 ];
 
+// The privacy policy is on Borys's website (store/privacy.html is the source),
+// because Google Play needs it at a public address. In the Android app the link
+// opens in the phone's browser.
+const PRIVACY_URL = 'https://acentrum.pl/playgoo/privacy.html';
+
 // "Remove ads": the one-time Google Play purchase (utils/purchase.js). Shown
 // only where it can be bought - the Android app, with Play reachable - or once
 // it is owned, so a family can see they have it.
@@ -215,7 +220,7 @@ function ParentPanel({ onClose }) {
       <div className="settings-section">
         <span className="settings-label">Privacy</span>
         <p className="parent-panel-text">
-          <a href="/polityka-prywatnosci.html" target="_blank" rel="noopener">
+          <a href={PRIVACY_URL} target="_blank" rel="noopener">
             Privacy policy
           </a>
         </p>

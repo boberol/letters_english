@@ -708,7 +708,9 @@ Noto Emoji is OFL/Apache — attribution belongs in a README if this is ever pub
   the card as tall as it was with an emoji. The pattern chips inside a family (🧱, 🥛...) are still emoji.
 - **The home grid is five across** from 760px, so the five Ćwicz rękę cards share a row; below 680px of
   height the heading and card subtitles step aside so all twelve cards fit a 1024x600 tablet. The
-  privacy policy and "Wyzeruj postępy" (asks twice) are behind "Dla rodzica" at the bottom.
+  privacy policy link, "Remove ads" and "Clear progress" (asks twice) are behind "For grown-ups" at
+  the bottom, which opens only past `ParentGate`. The policy itself is `store/privacy.html`, uploaded
+  by hand to acentrum.pl with `store/app-ads.txt` (see `store/README.md`); the app links to it.
 - Esc steps back a screen from anywhere (`App.jsx`), and a reload inside a tool reopens that tool.
 - Layout targets tablets: verify at 1280×800, 1024×600 and 390×844. Tap targets are 44px.
 - **Nothing on an activity screen should move because of something the child did.** Things that
