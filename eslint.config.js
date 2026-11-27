@@ -19,16 +19,10 @@ export default [
       'check_letters_browser.cjs',
       // Pasted into the dev server's console by hand, not bundled.
       'check_validation.js',
-      // Node scripts and a separate deployable: neither is browser code, and
-      // neither is part of the Vite build.
-      'license_keys.mjs',
-      'license_codes.mjs',
-      'license_admin.mjs',
-      'license_check.mjs',
-      'license_setup.mjs',
+      // A Node script and the Android project (whose copy of the build under
+      // assets/public is generated): neither is part of the Vite build.
       'android_build.mjs',
-      'android',
-      'worker'
+      'android'
     ]
   },
   {

@@ -3,10 +3,11 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const config = {
-  plugins: [
-    react(),
-    babel({ presets: [reactCompilerPreset()] }),
+// `vite build --mode android` (npm run build:android) is the copy bundled into
+// the Android app. It leaves the service worker out: the app's files are
+// already on the tablet, and a worker would go on serving the previous
+// version's cached build for a launch after every Play update.
+const pwa = () =>
     VitePWA({
       // The child cannot read, so there is no version prompt to show them and
       // nobody to dismiss it: a new build installs in the background and takes
@@ -62,8 +63,12 @@ const config = {
         ]
       }
     })
-  ],
-}
 
 // https://vite.dev/config/
-export default defineConfig(config)
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    ...(mode === 'android' ? [] : [pwa()])
+  ]
+}))

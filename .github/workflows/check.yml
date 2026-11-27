@@ -30,7 +30,7 @@ jobs:
 
       - run: npm run build
 
-      # Not a devDependency, so `npm ci` stays light for the deploy job.
+      # Not a devDependency, so `npm ci` stays light for the Android build.
       - run: npm install --no-save playwright@1.63.0 && npx playwright install --with-deps chromium
 
       - run: node check_letters_browser.cjs

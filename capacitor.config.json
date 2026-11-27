@@ -1,0 +1,15 @@
+{
+  "appId": "com.playgoo.letters",
+  "appName": "PlayGoo",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "style": "LIGHT"
+    }
+  }
+}

@@ -27,6 +27,7 @@ npm run dev      # Vite dev server on :5173
 npm run build    # production build to dist/
 npm run lint     # eslint (0 errors and 0 warnings expected)
 npm run preview  # serve the built output
+npm run build:android  # web build for the Android app (no service worker), copied into android/
 ```
 
 There is **no test framework** — no `npm test`, no runner installed. Verification is done by
@@ -48,8 +49,8 @@ server's console rather than run with Node (see the end of **Letter artwork**).
 `build_pictures.cjs <folder-of-pngs>` turns exported word pictures into the WebP files the picture
 games bundle, and checks them against the word list. Also ESLint-ignored. See **Pictures**.
 
-`android_build.mjs` builds the Android app out of `android/`, a Gradle project that is *not* part of
-the Vite build and needs a JDK and the Android SDK rather than anything in `node_modules`. Also
+`android_build.mjs` builds the Android app out of `android/`, a Capacitor (Gradle) project that
+needs a JDK and the Android SDK as well as `npm run build:android`. Also
 ESLint-ignored. See **The Android app**.
 
 ## Architecture
@@ -403,7 +404,7 @@ it offline.
 `favicon.svg` is a separate, simpler export of the mark with no `<rect>` plate, so `build_icons.cjs`
 no longer runs against it — and would overwrite `icon-512.png` with a flat rendering if it did. The
 full-bleed shapes (`icon-maskable-512.png`, `apple-touch-icon.png`, the Android `ic_maskable` and
-`store_icon.png`) were cut from `icon-512.png`: cropped inside its rounded corners and bevel, the
+`android/store_icon.png`, the 512px Play listing icon) were cut from `icon-512.png`: cropped inside its rounded corners and bevel, the
 glyph shrunk until its farthest white pixel sits at 77.5% of the radius (Android's circle mask shows
 79%), and the margin filled with the crop mirrored across each edge. A full-bleed export from the
 artwork's source would be better than that if the mark changes again. The two shapes:
@@ -424,69 +425,54 @@ a blank 192px icon. `Emulation.setDeviceMetricsOverride` has neither problem.
 
 ### The Android app
 
-`android/` is a **Trusted Web Activity**: an Android shell with no web code in it that opens
-`https://literki.acentrum.pl` (package `playgoo.acentrum`) full screen through the tablet's Chrome. It is about 1 MB and holds
-an icon, a splash screen and the address. Everything else - the app, the service worker, the
-offline cache - is the installed PWA, running in Chrome without Chrome's toolbar.
-
-**That it is not a WebView with the build copied into it is deliberate**, and the reason is the
-licence. A bundled build would run on its own origin (`https://localhost` under Capacitor), which
-`ALLOWED_ORIGIN` refuses, and its storage would be separate from Chrome's, so a family that had
-already activated in the browser would spend a second slot on the same tablet. A TWA is the same
-origin and the same storage: a tablet activated in Chrome is already activated in the app. It also
-means the shell almost never needs rebuilding - a push to `master` updates the app on every tablet
-the way it always did, and a new APK is only for changing the icon, the name or the address.
+`android/` is a **Capacitor 8** project (package `com.playgoo.letters`, set in `capacitor.config.json`
+and `android/app/build.gradle`): a WebView with the whole web build copied inside it, served from
+`https://localhost`. It replaced the Polish app's Trusted Web Activity (November 2026) because a TWA
+is Chrome showing a website, and AdMob and Play Billing need native code in the app. It also means
+the app needs no network and no Chrome, and nothing is deployed anywhere: **a new version of the
+app is a new upload to Play**, with `versionCode` raised in `android/app/build.gradle`.
 
 ```bash
-node android_build.mjs     # creates the release key on first run, builds, verifies
+npm run build:android      # web build for Android + cap sync (copies it into android/)
+node android_build.mjs     # the above, then the signed AAB and APK; creates the upload key on first run
 ```
 
-What makes Chrome hide the address bar is a claim made in both directions: the APK names the site,
-and the site names the certificate the APK is signed with, in `public/.well-known/assetlinks.json`.
-Three things therefore have to come from one key - the keystore, the fingerprint in that file, and
-the copy of the file the live site is serving - and `android_build.mjs` makes the first two in one
-run and checks the third, the same shape as `license_setup.mjs`. It ends with "Everything matches"
-or "NOT LIVE YET". **A mismatch is not an error anywhere**: the app installs, opens and works, with
-a browser address bar across the top. Chrome also caches the verdict, so after fixing it, clear
-Chrome's storage for the site or reinstall before concluding it is still broken.
-
-- **`android/release.jks` and `android/keystore.properties` are the app's identity, and the only
-  copy.** Android refuses an update signed by any other key, so without them a new version of the
-  shell means every family uninstalling and reinstalling. Both are gitignored; back them up
-  together, outside the repository. The script never overwrites a key - a keystore whose
-  properties file is missing stops it.
-- **`assetlinks.json` is not generated on every build, it is merged.** On Google Play there are two
-  certificates: this one signs what is uploaded, Google's signs what families download. Play
-  Console shows the second (Setup > App signing); add it with
-  `node android_build.mjs --add-fingerprint AA:BB:...`. Rewriting the file from the local key alone
-  would put the address bar back for everyone who installed from the store.
-- **The Gradle project is the source, not a generated artefact.** It was produced once by
-  Bubblewrap 1.25.0's generator and is edited by hand since; there is no `twa-manifest.json` and
-  `bubblewrap update` would overwrite the signing block. Name, colours, host and package id are the
-  `twaManifest` map at the top of `android/app/build.gradle`, and `android_build.mjs` reads the
-  host and package from there. The launcher icons and splash under `app/src/main/res/` were
-  rendered from the live site's `icon-512.png` and `icon-maskable-512.png`; if the mark changes,
-  they need regenerating, not just `build_icons.cjs`.
-- **`versionCode` must go up for every APK or bundle that replaces an installed one.** It is in
-  `android/app/build.gradle`, and Play rejects an upload that reuses one.
-- **The host is baked into the APK.** Moving to `naukaliterek.pl` means changing `hostName`,
-  serving `assetlinks.json` from the new domain and shipping a new APK - one more reason the domain
-  has to be settled before selling (see **The licence server**).
-- **The site-settings shortcut is switched off** (`enableSiteSettingsShortcut`). It puts "clear
-  data" one long-press away from the launcher icon, and that data is the licence and the stars.
-- **Notifications are off**, so the app asks for no permission at all.
-- **Gradle 8.11.1 runs on JDK 17-23.** The script takes `JAVA_HOME` and ignores whatever `java` is
-  on `PATH`; Android Studio's bundled runtime (25) is too new for it.
-
-What a TWA cannot do: run without a browser that supports it. On a tablet with no Chrome (or
-Chrome disabled) it falls back to whatever browser handles Custom Tabs, with that browser's own
-storage - so a different licence slot - and with an address bar. The first launch also needs a
-network, since nothing is in the APK; that costs nothing here, because activation needs one too.
+- **`vite build --mode android` leaves out the service worker** (`vite.config.js`). The files are
+  already on the tablet, and a worker would serve the previous version's cached build on the first
+  launch after every Play update. The web build (`npm run build`) still has it.
+- **The system Back button is `utils/native.js`**: with `@capacitor/app` listening, Back steps one
+  screen back through the history `App.jsx` keeps (its `depth`), and only on the home grid closes
+  the app. Without a listener, Back closed the app from any screen.
+- **The web view sits between the system bars, not under them.** Android 15+ forces edge to edge;
+  Capacitor's `SystemBars` (`insetsHandling: "native"`) pads the web view clear of the bars unless
+  the page asks for `viewport-fit=cover`, so `index.html` no longer asks for it. The padding shows
+  the window background, `#F8FAFC` like the page (`values/styles.xml`), and the bar icons are dark
+  (`style: "LIGHT"`). If `cover` ever comes back, every `100dvh` in `index.css` has to subtract the
+  insets too.
+- **`android/release.jks` and `android/keystore.properties` are the upload key**, made by
+  `android_build.mjs`, gitignored. With Play App Signing Google holds the key families' copies are
+  signed with; this one only proves an upload came from Borys, and losing it means a reset through
+  Play support. Back both up together. The script never overwrites a key.
+- **The launcher icon and splash** are the TWA's renders of `icon-512.png` / `icon-maskable-512.png`
+  (`mipmap-*/ic_launcher.png`, `ic_maskable.png`, `drawable-*/splash_logo.png`). The adaptive icon
+  insets the maskable cut on white, the way Chrome insets a WebAPK icon. Regenerate them if the mark
+  changes.
+- **Generated, not committed:** `android/app/src/main/assets/public` (the web build), the
+  `capacitor.*.json` files beside it, `res/xml/config.xml` and `capacitor-cordova-android-plugins/` -
+  `cap sync` writes them and `android/.gitignore` skips them, so a fresh checkout needs
+  `npm run build:android` before Android Studio can build it. `capacitor.build.gradle` and
+  `capacitor.settings.gradle` are also written by `cap sync` but are committed, as Capacitor expects.
+- **CI builds a debug APK** on pull requests that touch the Android side (`.github/workflows/android.yml`)
+  and keeps it as a downloadable artifact for 14 days - the quickest way to try a change on a tablet.
+- **JDK 21 to 24.** Capacitor 8 compiles for Java 21 and Gradle 8.14 does not run on 25.
 
 ### Windows PCs and classroom boards
 
-On Windows the app is the installed PWA, for the same reason Android is a TWA and not a bundled
-build: the licence lives on the site's origin and storage, and an Electron/Tauri copy would run on
+*This section describes the Polish app. The English edition ships on Android only and its web
+build is not deployed anywhere, so none of this is in use - but the code is still there.*
+
+On Windows the app is the installed PWA, for the same reason the Polish Android app was a TWA and
+not a bundled build: the licence lives on the site's origin and storage, and an Electron/Tauri copy would run on
 its own origin (refused by `ALLOWED_ORIGIN`) with its own storage (a second licence slot). Edge and
 Chrome install it into its own window and Start menu entry, sharing the browser profile's storage,
 so a board activated in the browser stays activated once installed. School IT can push it to every
@@ -497,7 +483,7 @@ PC with the `WebAppInstallForceList` policy (Edge and Chrome both have it).
   the module before the first render - and suppresses the browser's own infobar. The install button
   is shown on the activation screen and, as "Zainstaluj", on the home screen only, because it is for
   the adult. It appears only while the browser is offering, so never inside the installed app,
-  never on iOS, and never in the Android TWA.
+  never on iOS, and never in the Android app.
 - **The fullscreen button** shows on board-sized screens or with a mouse
   (`(min-width: 1400px), (hover: hover) and (pointer: fine)`), not on tablets, where it would only be
   something for a child to hit by mistake. The manifest stays `standalone` for the same reason as
@@ -525,7 +511,7 @@ to `master` deployed to the Polish site. Both were removed from this repository 
 English edition is free (ads plus a Play purchase), and nothing here may ever deploy to the Polish
 addresses (`naukaliterek.pages.dev`, `literki.acentrum.pl`). Do not bring back a `deploy.yml`
 pointing at them. Some notes above still mention the licence as the reason for a design choice
-(the TWA, origins); those reasons no longer apply here.
+(origins, the Windows PWA); those reasons no longer apply here.
 
 ### Pictures
 
