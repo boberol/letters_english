@@ -11,10 +11,10 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace = "pl.acentrum.playgoo"
+    namespace = "com.playgoo.letters"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "pl.acentrum.playgoo"
+        applicationId "com.playgoo.letters"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Must go up for every bundle uploaded to Play; it rejects a reused one.

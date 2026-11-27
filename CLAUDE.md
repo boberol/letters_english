@@ -425,7 +425,7 @@ a blank 192px icon. `Emulation.setDeviceMetricsOverride` has neither problem.
 
 ### The Android app
 
-`android/` is a **Capacitor 8** project (package `pl.acentrum.playgoo`, set in `capacitor.config.json`
+`android/` is a **Capacitor 8** project (package `com.playgoo.letters`, set in `capacitor.config.json`
 and `android/app/build.gradle`): a WebView with the whole web build copied inside it, served from
 `https://localhost`. It replaced the Polish app's Trusted Web Activity (November 2026) because a TWA
 is Chrome showing a website, and AdMob and Play Billing need native code in the app. It also means

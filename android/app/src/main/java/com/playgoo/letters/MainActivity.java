@@ -1,4 +1,4 @@
-package pl.acentrum.playgoo;
+package com.playgoo.letters;
 
 import com.getcapacitor.BridgeActivity;
 
