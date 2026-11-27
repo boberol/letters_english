@@ -6,6 +6,8 @@ import App from "./App";
 import "./utils/install";
 // The Android app's Back button, mapped onto the same screen history.
 import "./utils/native";
+// Before the first screen: a family that bought "Remove ads" sees no ad, ever.
+import "./utils/purchase";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
